@@ -3,9 +3,11 @@
 A file based blog.
 
 Designs are simple again.
+
 ![Write designs in HTML/CSS/JavaScript.](/screenshots/index.html.png)
 
 Posts are files.
+
 ![Make new posts with .blog files.](/screenshots/post.blog.png)
 
 # installation
