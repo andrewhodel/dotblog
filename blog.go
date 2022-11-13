@@ -198,7 +198,7 @@ func content_loop() {
 					for t := range new_titles {
 
 						if (post_path == t) {
-							list_all_posts_html += "<a href=\"/" + t + "\" class=\"list_all_posts_entry\">" + new_titles[t] + "</span>"
+							list_all_posts_html += "<a href=\"/" + t + "\" class=\"list_all_posts_entry\">" + new_titles[t] + "</a>"
 							break
 						}
 
