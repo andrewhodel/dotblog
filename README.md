@@ -1,7 +1,5 @@
 # .blog
 
-A file based blog.
-
 Designs are simple again.
 
 ![Write designs in HTML/CSS/JavaScript.](/screenshots/index.html.png)
