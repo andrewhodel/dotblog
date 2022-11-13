@@ -57,7 +57,7 @@ You can create self signed certificates.
 ```
 cd keys/
 openssl req -new -subj "/C=US/ST=Utah/CN=localhost" -newkey rsa:2048 -nodes -keyout server.key -out server.csr
-openssl x509 -req -days 365 -in localhost.csr -signkey server.key -out server.crt
+openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt
 ```
 
 ## upgrading
