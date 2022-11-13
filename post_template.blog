@@ -1,0 +1,14 @@
+// headers (end with three newlines)
+title: Title of Blog Post
+categories: one, two, three, four
+// get the date from something like unixtimestamp.com
+// or `date +%s`
+date: 1668329797
+
+
+// short html, displayed on short post (end with three newlines)
+// can include images, videos, etc
+
+
+// long html, entire post (end with EOF)
+// you can put any files you want to serve in main/
