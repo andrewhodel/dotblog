@@ -32,6 +32,7 @@ var content map[string] string
 var new_content map[string] string
 var sending_content = 0
 var ip_ac ipac.Ipac
+var mime_types map[string] string
 
 func parse_post(post_path string, p string) {
 	// do not use as a go subroutine
@@ -432,6 +433,18 @@ func handle_http_request(w http.ResponseWriter, r *http.Request) {
 			io.WriteString(w, "not found")
 		} else {
 
+			// get extension
+			var ext_p = strings.Split(r.URL.Path, ".")
+			var ext = ""
+			if (len(ext_p) >= 2) {
+				ext = ext_p[len(ext_p) - 1]
+				w.Header().Set("Content-Type", mime_types[ext])
+			}
+
+			if (ext == "") {
+				w.Header().Set("Content-Type", "application/octet-stream")
+			}
+
 			// send content
 			for (true) {
 				b := make([]byte, 1024)
@@ -465,6 +478,21 @@ func main() {
 	short_posts = make(map[string] string)
 	new_content = make(map[string] string)
 	content = make(map[string] string)
+
+	// basic mime types
+	mime_types = make(map[string] string)
+	mime_types["txt"] = "text/plain"
+	mime_types["html"] = "text/html"
+	mime_types["jpeg"] = "image/jpeg"
+	mime_types["jpg"] = "image/jpeg"
+	mime_types["png"] = "image/png"
+	mime_types["gif"] = "image/gif"
+	mime_types["webp"] = "image/webp"
+	mime_types["json"] = "application/json"
+	mime_types["xml"] = "text/xml"
+	mime_types["svg"] = "image/svg+xml"
+	mime_types["js"] = "text/javascript"
+	mime_types["css"] = "text/css"
 
 	// update content first to include all existing content if server is running
 	go content_loop()
