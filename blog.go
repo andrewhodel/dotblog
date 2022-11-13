@@ -412,12 +412,20 @@ func handle_http_request(w http.ResponseWriter, r *http.Request) {
 			io.WriteString(w, content["header"] + content["url:" + r.URL.Path] + content["footer"])
 		}
 
-	} else if (strings.Index(r.URL.Path, "/main") == 0) {
+
+	} else if (strings.Index(r.URL.Path, "..") != -1) {
+
+		// invalid URL, someone is trying to access a file they should not be trying to access
+		w.WriteHeader(http.StatusForbidden)
+		io.WriteString(w, "")
+
+	} else {
 
 		// a file accessed by the browser, included in the /main directory
-		f, err := os.Open(r.URL.Path)
+		f, err := os.Open("main" + r.URL.Path)
 
 		if (err != nil) {
+
 			// file not found
 			w.WriteHeader(http.StatusNotFound)
 			w.Header().Set("Content-Type", "text/html")
@@ -439,13 +447,6 @@ func handle_http_request(w http.ResponseWriter, r *http.Request) {
 			f.Close()
 
 		}
-
-	} else {
-
-		// invalid
-		w.WriteHeader(http.StatusNotFound)
-		w.Header().Set("Content-Type", "text/html")
-		io.WriteString(w, "not found")
 
 	}
 
