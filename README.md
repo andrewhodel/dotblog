@@ -2,6 +2,10 @@
 
 A file based blog.
 
+![Write designs in HTML/CSS/JavaScript.](/img/screenshots/index.html.png)
+
+![Make new posts with .blog files.](/img/screenshots/post.blog.png)
+
 # installation
 
 ```
@@ -57,3 +61,14 @@ openssl x509 -req -days 365 -in localhost.csr -signkey server.key -out server.cr
 ## upgrading
 
 `git pull` will upgrade .blog; `keys/`, `main/` and `posts/` are not modified.
+
+# donate
+
+## Bitcoin
+BTC 39AXGv2up1Yk5QNeLHfQra815jaYv9HcJk
+
+## Credit Card
+[![Paypal Donation](/img/paypal_donate_button.gif "Paypal Donation")](https://www.paypal.com/donate/?hosted_button_id=5XCWCGPC2FBU6)
+
+## Paypal by QR Code
+![Paypal QR Donation](/img/paypal_donate_qr.png "Paypal QR Donation")
