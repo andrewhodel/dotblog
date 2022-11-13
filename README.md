@@ -2,9 +2,9 @@
 
 A file based blog.
 
-![Write designs in HTML/CSS/JavaScript.](/img/screenshots/index.html.png)
+![Write designs in HTML/CSS/JavaScript.](/screenshots/index.html.png)
 
-![Make new posts with .blog files.](/img/screenshots/post.blog.png)
+![Make new posts with .blog files.](/screenshots/post.blog.png)
 
 # installation
 
