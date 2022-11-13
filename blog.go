@@ -414,7 +414,7 @@ func handle_http_request(w http.ResponseWriter, r *http.Request) {
 		}
 
 
-	} else if (strings.Index(r.URL.Path, "..") != -1) {
+	} else if (strings.Index(r.URL.Path, "/..") != -1) {
 
 		// invalid URL, someone is trying to access a file they should not be trying to access
 		w.WriteHeader(http.StatusForbidden)
