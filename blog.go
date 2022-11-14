@@ -141,7 +141,7 @@ func content_loop() {
 			//fmt.Println("path:", path, info.Size())
 
 			var fc, rf_err = ioutil.ReadFile(path)
-			if (content["url:/posts/" + path] != string(fc) && rf_err == nil) {
+			if (content["url:/" + path] != string(fc) && rf_err == nil) {
 				parse_post(string(path), string(fc))
 				update_content = true
 			}
