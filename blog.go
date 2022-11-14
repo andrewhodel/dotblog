@@ -420,7 +420,7 @@ func handle_http_request(w http.ResponseWriter, r *http.Request) {
 			var s = ""
 			for c := range categories[cat] {
 				var post_path = categories[cat][c]
-				s += "<a href=\"/posts/" + post_path + "\" style=\"category_post_entry\">" + post_path + "</a>"
+				s += "<a href=\"/" + post_path + "\" class=\"category_post_entry\">" + post_path + "</a>"
 			}
 
 			io.WriteString(w, s + content["footer"])
