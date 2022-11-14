@@ -21,8 +21,8 @@ import (
 )
 
 var updating_content = false
-var categories map[string] string
-var new_categories map[string] string
+var categories map[string] []string
+var new_categories map[string] []string
 var posts_by_date map[string] time.Time
 var new_posts_by_date map[string] time.Time
 var titles map[string] string
@@ -38,9 +38,6 @@ func parse_post(post_path string, p string) {
 	// do not use as a go subroutine
 
 	// parse headers in .blog file
-	// add information to
-	// new_categories
-	// new_posts_by_date
 
 	var short_html = ""
 	var full_html = ""
@@ -69,6 +66,17 @@ func parse_post(post_path string, p string) {
 				} else {
 					fmt.Println("error parsing date for file:", post_path, err)
 				}
+			} else if (strings.Index(line, "categories: ") == 0) {
+				var cats_str = strings.TrimPrefix(line, "categories: ")
+				var cats = strings.Split(cats_str, ", ")
+
+				for c := range cats {
+
+					var cat = cats[c]
+					new_categories[cat] = append(new_categories[cat], post_path)
+
+				}
+
 			} else if (strings.Index(line, "title: ") == 0) {
 				var title = strings.TrimPrefix(line, "title: ")
 				new_titles[post_path] = title
@@ -163,9 +171,9 @@ func content_loop() {
 		// create categories html
 		var categories_html = ""
 
-		for c := range categories {
-			var cat = categories[c]
-			categories_html += "<span class=\"categories_entry\">" + cat + "</span>"
+		for c := range new_categories {
+			//var posts_in_cat = new_categories[c]
+			categories_html += "<a href=\"/categories/" + c + "\" class=\"categories_entry\">" + c + "</a>"
 		}
 
 		// add all posts sorted by time to html blocks
@@ -304,7 +312,7 @@ func content_loop() {
 		// update categories map
 		for l := range new_categories {
 
-			if (new_categories[l] == "") {
+			if (len(new_categories[l]) == 0) {
 				// delete empty map value from categories
 				delete(categories, l)
 			} else {
@@ -399,6 +407,29 @@ func handle_http_request(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
 		io.WriteString(w, content["url:/"])
 
+	} else if (strings.Index(r.URL.Path, "/categories/") == 0) {
+
+		// get category
+		var cat = strings.TrimPrefix(r.URL.Path, "/categories/")
+
+		if (len(categories[cat]) > 0) {
+			// exists
+			w.Header().Set("Content-Type", "text/html")
+			io.WriteString(w, content["header"])
+
+			var s = ""
+			for c := range categories[cat] {
+				var post_path = categories[cat][c]
+				s += "<a href=\"/posts/" + post_path + "\" style=\"category_post_entry\">" + post_path + "</a>"
+			}
+
+			io.WriteString(w, s + content["footer"])
+		} else {
+			// does not exist
+			w.WriteHeader(http.StatusNotFound)
+			io.WriteString(w, "not found")
+		}
+
 	} else if (strings.Index(r.URL.Path, "/posts/") == 0) {
 
 		// a post
@@ -412,7 +443,6 @@ func handle_http_request(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "text/html")
 			io.WriteString(w, content["header"] + content["url:" + r.URL.Path] + content["footer"])
 		}
-
 
 	} else if (strings.Index(r.URL.Path, "/..") != -1) {
 
@@ -469,8 +499,8 @@ func handle_http_request(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 
-	new_categories = make(map[string] string)
-	categories = make(map[string] string)
+	new_categories = make(map[string] []string)
+	categories = make(map[string] []string)
 	new_posts_by_date = make(map[string] time.Time)
 	posts_by_date = make(map[string] time.Time)
 	new_titles = make(map[string] string)
