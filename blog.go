@@ -163,7 +163,13 @@ func content_loop() {
 		os.Exit(1)
 	}
 
-	if (string(index_html) != content["url:/"] || update_content == true) {
+	// use deflate (zlib) compression
+	var b bytes.Buffer
+	w := zlib.NewWriter(&b)
+	w.Write([]byte(index_html))
+	w.Close()
+
+	if (b.String() != content["url:/"] || update_content == true) {
 
 		// main/index.html was modified
 		// or there are posts that are new or modified
