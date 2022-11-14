@@ -93,7 +93,10 @@ func parse_post(post_path string, p string) {
 			full_html += line
 		}
 
-		newline_counter += 1
+		if (block_counter < 2) {
+			// newlines are not counted in the full post html
+			newline_counter += 1
+		}
 
 		if (newline_counter == 3) {
 			block_counter = block_counter + 1
