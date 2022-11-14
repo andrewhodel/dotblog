@@ -210,8 +210,10 @@ func content_loop() {
 			rev_sr = append(rev_sr, sr[len(sr)-1])
 			// remove the last entry from sr
 			sr = sr[:len(sr)-1]
+
 		}
 
+		var count = 0
 		for k := range rev_sr {
 			for d := range new_posts_by_date {
 				if (rev_sr[k] == int(new_posts_by_date[d].Unix())) {
@@ -219,23 +221,37 @@ func content_loop() {
 					var post_path = d
 					//var post_time = new_posts_by_date[d]
 
-					for p := range short_posts {
+					if (count < 20) {
 
-						if (post_path == p) {
-							recent_posts_html += short_posts[p]
-							break
+						// only place the most recent 20 posts in recent_posts_html
+
+						for p := range short_posts {
+
+							if (post_path == p) {
+								recent_posts_html += short_posts[p]
+								break
+							}
+
 						}
 
 					}
 
-					for t := range new_titles {
+					if (count < 40) {
 
-						if (post_path == t) {
-							list_all_posts_html += "<a href=\"/" + t + "\" class=\"list_all_posts_entry\">" + new_titles[t] + "</a>"
-							break
+						// only place the most recent 40 posts in list_all_posts_html
+
+						for t := range new_titles {
+
+							if (post_path == t) {
+								list_all_posts_html += "<a href=\"/" + t + "\" class=\"list_all_posts_entry\">" + new_titles[t] + "</a>"
+								break
+							}
+
 						}
 
 					}
+
+					count += 1
 
 					break
 				}
