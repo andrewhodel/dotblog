@@ -201,9 +201,19 @@ func content_loop() {
 
 		sort.Ints(sr)
 
+		// reverse the slice
+		rev_sr := make([]int, len(new_posts_by_date))
 		for k := range sr {
+			_ = k
+			// add the last entry to rev_sr
+			rev_sr = append(rev_sr, sr[len(sr)-1])
+			// remove the last entry from sr
+			sr = sr[:len(sr)-1]
+		}
+
+		for k := range rev_sr {
 			for d := range new_posts_by_date {
-				if (sr[k] == int(new_posts_by_date[d].Unix())) {
+				if (rev_sr[k] == int(new_posts_by_date[d].Unix())) {
 
 					var post_path = d
 					//var post_time = new_posts_by_date[d]
