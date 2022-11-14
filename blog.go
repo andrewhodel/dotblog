@@ -171,9 +171,22 @@ func content_loop() {
 		// create categories html
 		var categories_html = ""
 
-		for c := range new_categories {
-			//var posts_in_cat = new_categories[c]
-			categories_html += "<a href=\"/categories/" + c + "\" class=\"categories_entry\">" + c + "</a>"
+		// order new_categories by character
+		srr := make([]string, len(new_categories))
+		for k := range new_categories {
+			srr = append(srr, k)
+		}
+
+		sort.Strings(srr)
+
+		for k := range srr {
+			for d := range new_categories {
+				if (srr[k] == d) {
+					//var posts_in_cat = new_categories[d]
+					categories_html += "<a href=\"/categories/" + d + "\" class=\"categories_entry\">" + d + "</a>"
+					break
+				}
+			}
 		}
 
 		// add all posts sorted by time to html blocks
