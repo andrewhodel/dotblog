@@ -172,7 +172,7 @@ func content_loop() {
 		var categories_html = ""
 
 		// order new_categories by character
-		srr := make([]string, len(new_categories))
+		srr := make([]string, 0)
 		for k := range new_categories {
 			srr = append(srr, k)
 		}
@@ -194,7 +194,7 @@ func content_loop() {
 		var list_all_posts_html = ""
 
 		// order new_posts_by_date
-		sr := make([]int, len(new_posts_by_date))
+		sr := make([]int, 0)
 		for k := range new_posts_by_date {
 			sr = append(sr, int(new_posts_by_date[k].Unix()))
 		}
@@ -202,9 +202,10 @@ func content_loop() {
 		sort.Ints(sr)
 
 		// reverse the slice
-		rev_sr := make([]int, len(new_posts_by_date))
+		rev_sr := make([]int, 0)
 		for k := range sr {
 			_ = k
+
 			// add the last entry to rev_sr
 			rev_sr = append(rev_sr, sr[len(sr)-1])
 			// remove the last entry from sr
