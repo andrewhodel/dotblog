@@ -80,7 +80,7 @@ func parse_post(post_path string, p string) {
 			} else if (strings.Index(line, "title: ") == 0) {
 				var title = strings.TrimPrefix(line, "title: ")
 				new_titles[post_path] = title
-				short_html += "<div class=\"recent_posts_entry\"><h1><a href=\"" + post_path + "\">" + title + "</a></h1></div>"
+				short_html += "<div class=\"posts_entry\"><h1><a href=\"" + post_path + "\">" + title + "</a></h1></div>"
 			}
 
 		} else if (block_counter == 1) {
@@ -190,8 +190,8 @@ func content_loop() {
 		}
 
 		// add all posts sorted by time to html blocks
-		var recent_posts_html = ""
-		var list_all_posts_html = ""
+		var short_posts_html = ""
+		var post_titles_html = ""
 
 		// order new_posts_by_date
 		sr := make([]int, 0)
@@ -223,12 +223,12 @@ func content_loop() {
 
 					if (count < 20) {
 
-						// only place the most recent 20 posts in recent_posts_html
+						// only place the most recent 20 posts in short_posts_html
 
 						for p := range short_posts {
 
 							if (post_path == p) {
-								recent_posts_html += short_posts[p]
+								short_posts_html += short_posts[p]
 								break
 							}
 
@@ -238,12 +238,12 @@ func content_loop() {
 
 					if (count < 40) {
 
-						// only place the most recent 40 posts in list_all_posts_html
+						// only place the most recent 40 posts in post_titles_html
 
 						for t := range new_titles {
 
 							if (post_path == t) {
-								list_all_posts_html += "<a href=\"/" + t + "\" class=\"list_all_posts_entry\">" + new_titles[t] + "</a>"
+								post_titles_html += "<a href=\"/" + t + "\" class=\"post_titles_entry\">" + new_titles[t] + "</a>"
 								break
 							}
 
@@ -273,23 +273,23 @@ func content_loop() {
 				// add all the categories
 				lines[l] = categories_html
 
-			} else if (line == "<!-- ######recent_posts###### -->") {
+			} else if (line == "<!-- ######posts###### -->") {
 
 				// add the most recent posts
-				lines[l] = recent_posts_html
+				lines[l] = short_posts_html
 
 				// stop adding to the header after this
 				// to replace this segment with content if not index.html
 				header_footer_flip = true
 
-			} else if (line == "<!-- ######list_all_posts###### -->") {
+			} else if (line == "<!-- ######post_titles###### -->") {
 
 				// add all posts
-				lines[l] = list_all_posts_html
+				lines[l] = post_titles_html
 
 			}
 
-			if (line != "<!-- ######recent_posts###### -->") {
+			if (line != "<!-- ######posts###### -->") {
 
 				// all lines except this one are added to the header and footer
 				// and this line flips them
@@ -308,11 +308,11 @@ func content_loop() {
 
 		new_content["url:/"] = new_index_html
 
-		// add categories and list_all_posts to header and footer
+		// add categories and post_titles to header and footer
 		header = strings.Replace(header, "<!-- ######categories###### -->", categories_html, 1)
-		header = strings.Replace(header, "<!-- ######list_all_posts###### -->", list_all_posts_html, 1)
+		header = strings.Replace(header, "<!-- ######post_titles###### -->", post_titles_html, 1)
 		footer = strings.Replace(footer, "<!-- ######categories###### -->", categories_html, 1)
-		footer = strings.Replace(footer, "<!-- ######list_all_posts###### -->", list_all_posts_html, 1)
+		footer = strings.Replace(footer, "<!-- ######post_titles###### -->", post_titles_html, 1)
 
 		new_content["header"] = header
 		new_content["footer"] = footer
