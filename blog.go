@@ -96,10 +96,13 @@ func parse_post(post_path string, p string) {
 
 		if (block_counter < 2) {
 			// newlines are not counted in the full post html
-			newline_counter += 1
+			if (len(line) == 0 || line == "\r") {
+				// empty line or line with \r
+				newline_counter += 1
+			}
 		}
 
-		if (newline_counter == 3) {
+		if (newline_counter == 2) {
 			block_counter = block_counter + 1
 			newline_counter = 0
 		}

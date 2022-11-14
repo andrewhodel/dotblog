@@ -1,4 +1,4 @@
-// headers (end with three newlines)
+// headers (end with two empty lines)
 title: Title of Blog Post
 categories: one, two, three, four
 // get the date from something like unixtimestamp.com
@@ -6,7 +6,7 @@ categories: one, two, three, four
 date: 1668329797
 
 
-// short html, displayed on short post (end with three newlines)
+// short html, displayed on short post (end with two empty lines)
 // can include images, videos, etc
 
 
