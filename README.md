@@ -1,6 +1,6 @@
 # .blog
 
-Designs are simple again.
+Designs are HTML/CSS/Javascript.
 
 ![Write designs in HTML/CSS/JavaScript.](/readme_resources/index.html.png)
 
