@@ -36,9 +36,9 @@ GO111MODULE=off go get -u github.com/andrewhodel/go-ip-ac
 
 `sudo` allows `iptables` permission.
 
-`sudo GOPATH=/home/ec2-user/go GO111MODULE=off go run blog.go` to run in the foreground.
+`sudo GOPATH=/home/ec2-user/go GO111MODULE=off go run dotblog_server.go` to run in the foreground.
 
-`sudo GOPATH=/home/ec2-user/go GO111MODULE=off go run blog.go > /dev/null 2>&1 &` to run in the background.
+`sudo GOPATH=/home/ec2-user/go GO111MODULE=off go run dotblog_server.go > /dev/null 2>&1 &` to run in the background.
 
 ## style
 
