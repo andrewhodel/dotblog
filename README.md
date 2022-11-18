@@ -76,3 +76,9 @@ BTC 39AXGv2up1Yk5QNeLHfQra815jaYv9HcJk
 
 ## Paypal by QR Code
 ![Paypal QR Donation](/readme_resources/paypal_donate_qr.png "Paypal QR Donation")
+
+# verification
+
+The OP_RETURN data in this BTC transaction provides btc-blockchain-copy-count checksum verification of this repository, the associated github account, the files and the commit dates.
+
+https://blockstream.info/tx/9d014787b37a535085db55680b89b37cfc939ac61959e920051ac2720d5a3314?expand
