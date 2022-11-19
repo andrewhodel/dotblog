@@ -89,13 +89,13 @@ func parse_post(post_path string, p string) {
 				var title = strings.TrimPrefix(line, "title: ")
 				new_titles[post_path] = title
 				title_string = "<span class=\"post_title\">" + title + "</span>"
-				short_html += "<div class=\"recent_posts_entry\"><h1><a href=\"" + post_path + "\">" + title + "</a></h1></div>"
+				short_html += "<div class=\"recent_posts_entry\"><h1><a href=\"" + post_path + "\">" + title + "</a></h1></div>" + "\n"
 			}
 
 		} else if (block_counter == 1) {
 			// short html
 			//fmt.Println("short html line", line)
-			short_html += line
+			short_html += line + "\n"
 		} else if (block_counter == 2) {
 			// full html
 			//fmt.Println("full html line", line)
@@ -104,7 +104,7 @@ func parse_post(post_path string, p string) {
 				full_html += title_string + ts_string + "<div class=\"post_content\">"
 				full_html_started = true
 			}
-			full_html += line
+			full_html += line + "\n"
 		}
 
 		if (block_counter < 2) {
@@ -321,14 +321,14 @@ func content_loop() {
 				// and this line flips them
 
 				if (header_footer_flip == false) {
-					header += line
+					header += line + "\n"
 				} else {
-					footer += line
+					footer += line + "\n"
 				}
 
 			}
 
-			new_index_html += lines[l]
+			new_index_html += lines[l] + "\n"
 
 		}
 
