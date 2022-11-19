@@ -479,7 +479,11 @@ func handle_http_request(w http.ResponseWriter, r *http.Request) {
 			var s = ""
 			for c := range categories[cat] {
 				var post_path = categories[cat][c]
-				s += "<a href=\"/" + post_path + "\" class=\"category_post_entry\">" + post_path + "</a>"
+
+				var title = get_post_title(post_path)
+				var t = timeago(get_post_date(post_path))
+
+				s += "<div class=\"category_post_entry\"><a href=\"/" + post_path + "\" class=\"category_post_link\">" + title + "</a><span class=\"category_post_date\">" + t + "</span></div>"
 			}
 
 			io.WriteString(w, s + content["footer"])
@@ -553,6 +557,70 @@ func handle_http_request(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sending_content = sending_content - 1
+
+}
+
+func get_post_title(post_path string) (string) {
+
+	var title = ""
+	for l := range titles {
+
+		if (l == post_path) {
+			title = titles[l]
+			break
+		}
+
+	}
+
+	return title
+
+}
+
+func get_post_date(post_path string) (time.Time) {
+
+	var date time.Time
+	for l := range posts_by_date {
+		if (l == post_path) {
+			date = posts_by_date[l]
+			break
+		}
+	}
+
+	return date
+
+}
+
+func timeago(t time.Time) (string) {
+	// return time ago in readable format
+
+	// first get seconds
+	var ago = time.Now().Unix() - t.Unix()
+
+	var s = "s"
+
+	if (ago >= 60 * 60 * 24 * 365) {
+		// get years
+		ago = ago / (60 * 60 * 24 * 365)
+		s = "y"
+	} else if (ago >= 60 * 60 * 24 * 30) {
+		// get months
+		ago = ago / (60 * 60 * 24 *30)
+		s = "m"
+	} else if (ago >= 60 * 60 * 24) {
+		// get days
+		ago = ago / (60 * 60 * 24)
+		s = "d"
+	} else if (ago >= 60 * 60) {
+		// get hours
+		ago = ago / (60 * 60)
+		s = "h"
+	} else if (ago >= 60) {
+		// get minutes
+		ago = ago / 60
+		s = "m"
+	}
+
+	return strconv.FormatInt(ago, 10) + s + " ago"
 
 }
 
