@@ -1,12 +1,12 @@
 # .blog
 
+Manage posts with files.
+
+![Make new posts with .blog files.](/readme_resources/post.blog.png)
+
 Designs are HTML/CSS/Javascript.
 
 ![Write designs in HTML/CSS/JavaScript.](/readme_resources/index.html.png)
-
-Posts are files.
-
-![Make new posts with .blog files.](/readme_resources/post.blog.png)
 
 Content is updated every minute based on file system changes, without restarting the server.
 
