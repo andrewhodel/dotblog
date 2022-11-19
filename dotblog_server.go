@@ -38,11 +38,16 @@ var mime_types map[string] string
 func parse_post(post_path string, p string) {
 	// do not use as a go subroutine
 
-	// parse headers in .blog file
-
+	// displayed on recent posts
 	var short_html = ""
-	var full_html = ""
+	// displayed when post is viewed
+	var full_html = "<div class=\"post\">"
 
+	var title_string = ""
+	var ts_string = ""
+	var full_html_started = false
+
+	// parse .blog file
 	var newline_counter = 0
 	var block_counter = 0
 	var lines = strings.Split(p, "\n")
@@ -63,7 +68,9 @@ func parse_post(post_path string, p string) {
 				// unix timestamp, seconds since 1970
 				date, err := strconv.ParseInt(strings.TrimPrefix(line, "date: "), 10, 64)
 				if (err == nil) {
+					var ts = time.Unix(date, 0)
 					new_posts_by_date[post_path] = time.Unix(date, 0)
+					ts_string = "<span class=\"unix_ts post_date\">" + strconv.FormatInt(ts.Unix(), 10) + "</span>"
 				} else {
 					fmt.Println("error parsing date for file:", post_path, err)
 				}
@@ -81,7 +88,8 @@ func parse_post(post_path string, p string) {
 			} else if (strings.Index(line, "title: ") == 0) {
 				var title = strings.TrimPrefix(line, "title: ")
 				new_titles[post_path] = title
-				short_html += "<div class=\"posts_entry\"><h1><a href=\"" + post_path + "\">" + title + "</a></h1></div>"
+				title_string = "<span class=\"post_title\">" + title + "</span>"
+				short_html += "<div class=\"recent_posts_entry\"><h1><a href=\"" + post_path + "\">" + title + "</a></h1></div>"
 			}
 
 		} else if (block_counter == 1) {
@@ -91,6 +99,11 @@ func parse_post(post_path string, p string) {
 		} else if (block_counter == 2) {
 			// full html
 			//fmt.Println("full html line", line)
+			if (full_html_started == false) {
+				// put full html in post_content class
+				full_html += title_string + ts_string + "<div class=\"post_content\">"
+				full_html_started = true
+			}
 			full_html += line
 		}
 
@@ -110,7 +123,7 @@ func parse_post(post_path string, p string) {
 	}
 
 	short_posts[post_path] = short_html
-	new_content["url:/" + post_path] = full_html
+	new_content["url:/" + post_path] = full_html + "</div></div>"
 
 	return
 
@@ -481,9 +494,9 @@ func handle_http_request(w http.ResponseWriter, r *http.Request) {
 				var post_path = categories[cat][c]
 
 				var title = get_post_title(post_path)
-				var t = timeago(get_post_date(post_path))
+				var ts = strconv.FormatInt(get_post_ts(post_path), 10)
 
-				s += "<div class=\"category_post_entry\"><a href=\"/" + post_path + "\" class=\"category_post_link\">" + title + "</a><span class=\"category_post_date\">" + t + "</span></div>"
+				s += "<div class=\"category_post_entry\"><a href=\"/" + post_path + "\" class=\"category_post_link\">" + title + "</a><span class=\"unix_ts category_post_date\">" + ts + "</span></div>"
 			}
 
 			io.WriteString(w, s + content["footer"])
@@ -576,7 +589,7 @@ func get_post_title(post_path string) (string) {
 
 }
 
-func get_post_date(post_path string) (time.Time) {
+func get_post_ts(post_path string) (int64) {
 
 	var date time.Time
 	for l := range posts_by_date {
@@ -586,7 +599,7 @@ func get_post_date(post_path string) (time.Time) {
 		}
 	}
 
-	return date
+	return date.Unix()
 
 }
 

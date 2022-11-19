@@ -31,7 +31,24 @@ body {
 	margin-left: 10px;
 }
 
-.posts_entry {
+.post {
+}
+
+.post_title {
+	font-size: 2.4em;
+	font-weight: 300px;
+	display: block;
+}
+
+.post_date {
+	display: block;
+}
+
+.post_content {
+	display: block;
+}
+
+.recent_posts_entry {
 	margin: 4px;
 }
 
@@ -69,4 +86,43 @@ body {
 <div style="clear: both; padding: 10px;">Footer</div>
 
 </body>
+
+<script type="text/javascript">
+
+var timeago = function(s) {
+	s = Number(s);
+	var t = "s";
+
+	if (s > 60 * 60 * 24 * 365) {
+		s = s / (60 * 60 * 24 * 365);
+		t = "y";
+	} else if (s > 60 * 60 * 24 * 30) {
+		s = s / (60 * 60 * 24 * 30);
+		t = "m";
+	} else if (s > 60 * 60 * 24) {
+		s = s / (60 * 60 * 24);
+		t = "d";
+	} else if (s > 60 * 60) {
+		s = s / (60 * 60);
+		t = "h";
+	} else if (s > 60) {
+		s = s / (60);
+		t = "m";
+	}
+
+	return s + t + ' ago';
+}
+
+window.addEventListener('load', function() {
+	// convert timestamps from unix timestamps to be more readable
+	var l = document.getElementsByClassName('unix_ts');
+	var c = 0;
+	while (c < l.length) {
+		l[c].innerText = timeago(l[c].innerText);
+		c++;
+	}
+});
+
+</script>
+
 </html>
