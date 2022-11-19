@@ -17,7 +17,6 @@ import (
 	"net/http"
 	"github.com/andrewhodel/go-ip-ac"
 	"path/filepath"
-	"errors"
 	"sort"
 )
 
@@ -144,6 +143,7 @@ func content_loop() {
 	// check files in posts/
 	// and update template
 	err := filepath.Walk("posts", func(path string, info os.FileInfo, err error) error {
+
 		if err != nil {
 			return err
 		}
@@ -151,7 +151,8 @@ func content_loop() {
 		if (path != "posts") {
 
 			if (strings.Index(path, ".blog") != len(path) - 5) {
-				return errors.New("not a .blog file: " + string(path))
+				fmt.Println("not a .blog file: " + string(path))
+				return nil
 			}
 
 			//fmt.Println("path:", path, info.Size())
