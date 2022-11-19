@@ -90,7 +90,7 @@ body {
 <script type="text/javascript">
 
 var timeago = function(s) {
-	s = Number(s);
+	s = (Date.now() / 1000) - Number(s);
 	var t = "s";
 
 	if (s > 60 * 60 * 24 * 365) {
@@ -110,7 +110,7 @@ var timeago = function(s) {
 		t = "m";
 	}
 
-	return s + t + ' ago';
+	return s.toFixed(2) + t + ' ago';
 }
 
 window.addEventListener('load', function() {
