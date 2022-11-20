@@ -64,6 +64,7 @@ func parse_post(post_path string, p string) {
 			//fmt.Println("headers line", line)
 
 			if (strings.Index(line, "date: ") == 0) {
+
 				// parse date
 				// unix timestamp, seconds since 1970
 				date, err := strconv.ParseInt(strings.TrimPrefix(line, "date: "), 10, 64)
@@ -74,7 +75,9 @@ func parse_post(post_path string, p string) {
 				} else {
 					fmt.Println("error parsing date for file:", post_path, err)
 				}
+
 			} else if (strings.Index(line, "categories: ") == 0) {
+
 				var cats_str = strings.TrimPrefix(line, "categories: ")
 				var cats = strings.Split(cats_str, ", ")
 
@@ -92,12 +95,18 @@ func parse_post(post_path string, p string) {
 
 			} else if (strings.Index(line, "title: ") == 0) {
 
+				// get the title from the header line
 				var title = strings.TrimPrefix(line, "title: ")
+
+				// add the title to new_titles
 				new_titles[post_path] = title
 
+				// store the title string
 				title_string = "<span class=\"post_title\">" + title + "</span>"
 
-				short_html += "<div class=\"recent_posts_entry\"><a class=\"recent_post_title\" href=\"" + post_path + "\">" + title + "</a>" + "\n"
+				// create the start of short_html
+				// with the unique strings that represent the positions of these blocks
+				short_html += "<div class=\"recent_posts_entry\"><a class=\"recent_post_title\" href=\"" + post_path + "\">" + title + "</a><span class=\"unix_ts recent_post_date\"><!--######rp_ts######--></span><div class=\"recent_post_categories\"><!--######rp_cats######--></div>" + "\n"
 
 			}
 
@@ -114,7 +123,28 @@ func parse_post(post_path string, p string) {
 			if (full_html_started == false) {
 
 				// finish short_html
-				short_html += "</div>"
+				short_html += "</div>" + "\n"
+
+				var rp_ts = strconv.FormatInt(get_post_ts(post_path, true), 10)
+				var rp_cats = ""
+
+				for c := range new_categories {
+
+					var cat = new_categories[c]
+
+					for l := range cat {
+						if (cat[l] == post_path) {
+							// add to rp_cats
+							rp_cats += "<a href=\"/categories/" + c + "\">" + c + "</a>"
+							break
+						}
+					}
+
+				}
+
+				// replace the unique strings that represent the positions of these blocks
+				short_html = strings.Replace(short_html, "<!--######rp_ts######-->", rp_ts, 1)
+				short_html = strings.Replace(short_html, "<!--######rp_cats######-->", rp_cats, 1)
 
 				// put full html in post_content class
 				full_html += title_string + ts_string + "<div class=\"post_categories\"><span class=\"post_categories_title\">Categories</span>" + categories_string + "</div>" + "<div class=\"post_content\">"
@@ -515,7 +545,7 @@ func handle_http_request(w http.ResponseWriter, r *http.Request) {
 				var post_path = categories[cat][c]
 
 				var title = get_post_title(post_path)
-				var ts = strconv.FormatInt(get_post_ts(post_path), 10)
+				var ts = strconv.FormatInt(get_post_ts(post_path, false), 10)
 
 				s += "<div class=\"category_post_entry\"><a href=\"/" + post_path + "\" class=\"category_post_link\">" + title + "</a><span class=\"unix_ts category_post_date\">" + ts + "</span></div>"
 			}
@@ -610,12 +640,18 @@ func get_post_title(post_path string) (string) {
 
 }
 
-func get_post_ts(post_path string) (int64) {
+func get_post_ts(post_path string, use_new bool) (int64) {
+
+	var from = posts_by_date
+	if (use_new == true) {
+		// use new posts by date map
+		from = new_posts_by_date
+	}
 
 	var date time.Time
-	for l := range posts_by_date {
+	for l := range from {
 		if (l == post_path) {
-			date = posts_by_date[l]
+			date = from[l]
 			break
 		}
 	}
