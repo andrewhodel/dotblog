@@ -157,14 +157,25 @@ var timeago = function(s) {
 	return s.toFixed(2) + t + ' ago';
 }
 
-window.addEventListener('load', function() {
+var update_unix_ts = function() {
 	// convert timestamps from unix timestamps to be more readable
 	var l = document.getElementsByClassName('unix_ts');
 	var c = 0;
 	while (c < l.length) {
-		l[c].innerText = timeago(l[c].innerText);
+		if (l[c].unix_ts === undefined) {
+			l[c].unix_ts = l[c].innerText;
+		}
+		l[c].innerText = timeago(l[c].unix_ts);
 		c++;
 	}
+}
+
+window.addEventListener('load', function() {
+
+	update_unix_ts();
+	// every 5 seconds
+	setInterval(update_unix_ts, 1000 * 5)
+
 });
 
 </script>
