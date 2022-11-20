@@ -496,7 +496,7 @@ func handle_http_request(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "text/html")
 			io.WriteString(w, content["header"])
 
-			var s = ""
+			var s = "<span class=\"category_title\">" + cat + "</span>"
 			for c := range categories[cat] {
 				var post_path = categories[cat][c]
 
