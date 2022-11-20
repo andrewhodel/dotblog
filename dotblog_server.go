@@ -44,6 +44,7 @@ func parse_post(post_path string, p string) {
 
 	var title_string = ""
 	var ts_string = ""
+	var categories_string = ""
 	var full_html_started = false
 
 	// parse .blog file
@@ -80,7 +81,12 @@ func parse_post(post_path string, p string) {
 				for c := range cats {
 
 					var cat = cats[c]
+
+					// add to new_categories
 					new_categories[cat] = append(new_categories[cat], post_path)
+
+					// add to categories_string as html element to be displayed when the full post is viewed
+					categories_string += "<a href=\"/categories/" + cat + "\">" + cat + "</a>"
 
 				}
 
@@ -100,7 +106,7 @@ func parse_post(post_path string, p string) {
 			//fmt.Println("full html line", line)
 			if (full_html_started == false) {
 				// put full html in post_content class
-				full_html += title_string + ts_string + "<div class=\"post_content\">"
+				full_html += title_string + ts_string + "<div class=\"post_categories\"><span class=\"post_categories_title\">Categories</span>" + categories_string + "</div>" + "<div class=\"post_content\">"
 				full_html_started = true
 			}
 			full_html += line + "\n"
