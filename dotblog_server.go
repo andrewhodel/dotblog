@@ -91,25 +91,39 @@ func parse_post(post_path string, p string) {
 				}
 
 			} else if (strings.Index(line, "title: ") == 0) {
+
 				var title = strings.TrimPrefix(line, "title: ")
 				new_titles[post_path] = title
+
 				title_string = "<span class=\"post_title\">" + title + "</span>"
-				short_html += "<div class=\"recent_posts_entry\"><h1><a href=\"" + post_path + "\">" + title + "</a></h1></div>" + "\n"
+
+				short_html += "<div class=\"recent_posts_entry\"><a class=\"recent_post_title\" href=\"" + post_path + "\">" + title + "</a>" + "\n"
+
 			}
 
 		} else if (block_counter == 1) {
 			// short html
+
 			//fmt.Println("short html line", line)
 			short_html += line + "\n"
+
 		} else if (block_counter == 2) {
 			// full html
 			//fmt.Println("full html line", line)
+
 			if (full_html_started == false) {
+
+				// finish short_html
+				short_html += "</div>"
+
 				// put full html in post_content class
 				full_html += title_string + ts_string + "<div class=\"post_categories\"><span class=\"post_categories_title\">Categories</span>" + categories_string + "</div>" + "<div class=\"post_content\">"
 				full_html_started = true
+
 			}
+
 			full_html += line + "\n"
+
 		}
 
 		if (block_counter < 2) {
