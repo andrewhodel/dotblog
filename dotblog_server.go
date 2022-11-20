@@ -201,7 +201,7 @@ func content_loop() {
 		if (path != "posts") {
 
 			if (strings.Index(path, ".blog") != len(path) - 5) {
-				fmt.Println("not a .blog file: " + string(path))
+				//fmt.Println("not a .blog file: " + string(path))
 				return nil
 			}
 
