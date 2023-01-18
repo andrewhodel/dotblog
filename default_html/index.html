@@ -139,26 +139,30 @@ body {
 
 var timeago = function(s) {
 	s = (Date.now() / 1000) - Number(s);
-	var t = "s";
+	var t = 'second';
 
 	if (s > 60 * 60 * 24 * 365) {
 		s = s / (60 * 60 * 24 * 365);
-		t = "year";
+		t = 'year';
 	} else if (s > 60 * 60 * 24 * 30) {
 		s = s / (60 * 60 * 24 * 30);
-		t = "month";
+		t = 'month';
 	} else if (s > 60 * 60 * 24) {
 		s = s / (60 * 60 * 24);
-		t = "day";
+		t = 'day';
 	} else if (s > 60 * 60) {
 		s = s / (60 * 60);
-		t = "hour";
+		t = 'hour';
 	} else if (s > 60) {
 		s = s / (60);
-		t = "minute";
+		t = 'minute';
 	}
 
-	return s.toFixed(2) + t + ' ago';
+	if (s > 1) {
+		t += 's';
+	}
+
+	return s.toFixed(2) + ' ' + t + ' ago';
 }
 
 var update_unix_ts = function() {
