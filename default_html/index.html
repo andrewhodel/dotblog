@@ -143,19 +143,19 @@ var timeago = function(s) {
 
 	if (s > 60 * 60 * 24 * 365) {
 		s = s / (60 * 60 * 24 * 365);
-		t = "y";
+		t = "year";
 	} else if (s > 60 * 60 * 24 * 30) {
 		s = s / (60 * 60 * 24 * 30);
-		t = "m";
+		t = "month";
 	} else if (s > 60 * 60 * 24) {
 		s = s / (60 * 60 * 24);
-		t = "d";
+		t = "day";
 	} else if (s > 60 * 60) {
 		s = s / (60 * 60);
-		t = "h";
+		t = "hour";
 	} else if (s > 60) {
 		s = s / (60);
-		t = "m";
+		t = "minute";
 	}
 
 	return s.toFixed(2) + t + ' ago';
