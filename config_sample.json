@@ -6,5 +6,6 @@
 "loadCertificatesFromFiles": true,
 "fqdn": "domain.com",
 "port": 443,
-"redirectFromDefaultHttpPort": true
+"redirectFromDefaultHttpPort": true,
+"ipacModuleDirectory": "/home/ec2-user/go/src/github.com/andrewhodel/go-ip-ac"
 }

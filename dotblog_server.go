@@ -39,6 +39,7 @@ type Config struct {
 	Fqdn				string	`json:"fqdn"`
 	Port				int64	`json:"port"`
 	RedirectFromDefaultHttpPort	bool	`json:"redirectFromDefaultHttpPort"`
+	IpacModuleDirectory		string	`json:"ipacModuleDirectory"`
 }
 
 var updating_content = false
@@ -730,6 +731,9 @@ func main() {
 	mime_types["svg"] = "image/svg+xml"
 	mime_types["js"] = "text/javascript"
 	mime_types["css"] = "text/css"
+
+	// set the module directory for ipac
+	ip_ac.ModuleDirectory = config.IpacModuleDirectory
 
 	// update content first to include all existing content if server is running
 	go content_loop()

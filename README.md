@@ -25,6 +25,7 @@ cp config_sample.json config.json
 
 * set the paths to your TLS keys or place the key data in config.json
 * set the fqdn (fully qualified domain name) of the server
+* set the ipacModuleDirectory or the go-ip-ac Go Module must be in $HOME/go/src/github.com/andrewhodel/go-ip-ac
 
 2. Install the required Go modules.
 
