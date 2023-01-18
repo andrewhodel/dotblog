@@ -25,7 +25,6 @@ import (
 	"strings"
 	"strconv"
 	"bytes"
-	"compress/zlib"
 	"net/http"
 	"github.com/andrewhodel/go-ip-ac"
 	"path/filepath"
@@ -253,13 +252,7 @@ func content_loop() {
 		os.Exit(1)
 	}
 
-	// use deflate (zlib) compression
-	var b bytes.Buffer
-	w := zlib.NewWriter(&b)
-	w.Write([]byte(index_html))
-	w.Close()
-
-	if (b.String() != content["url:/"] || update_content == true) {
+	if (string(index_html) != content["url:/"] || update_content == true) {
 
 		// main/index.html was modified
 		// or there are posts that are new or modified
@@ -406,12 +399,7 @@ func content_loop() {
 
 		}
 
-		// use deflate (zlib) compression
-		var b bytes.Buffer
-		w := zlib.NewWriter(&b)
-		w.Write([]byte(new_index_html))
-		w.Close()
-		new_content["url:/"] = b.String()
+		new_content["url:/"] = new_index_html
 
 		// add categories and post_titles to header and footer
 		header = strings.Replace(header, "<!-- ######categories###### -->", categories_html, 1)
@@ -550,7 +538,6 @@ func handle_http_request(w http.ResponseWriter, r *http.Request) {
 
 		// main view
 		w.Header().Set("Content-Type", "text/html")
-		w.Header().Set("Content-Encoding", "deflate")
 		io.WriteString(w, content["url:/"])
 
 	} else if (strings.Index(r.URL.Path, "/categories/") == 0) {
@@ -822,14 +809,14 @@ func main() {
 
 	})
 
+	fmt.Println("HTTPS Service Starting on Port " + strconv.FormatInt(config.Port, 10))
+
 	https_err := srv.Serve(ln)
 	if https_err != nil {
 		fmt.Println("Error starting HTTPS Server")
 		fmt.Println(https_err)
 		os.Exit(1)
 	}
-
-	fmt.Println("HTTPS Service Started on Port " + strconv.FormatInt(config.Port, 10))
 
 }
 
