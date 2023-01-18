@@ -129,7 +129,7 @@ func parse_post(post_path string, p string) {
 
 				// create the start of short_html
 				// with the unique strings that represent the positions of these blocks
-				short_html += "<div class=\"recent_posts_entry\"><a class=\"recent_post_title\" href=\"" + post_path + "\">" + title + "</a><span class=\"unix_ts recent_post_date\"><!--######rp_ts######--></span><div class=\"recent_post_categories\"><!--######rp_cats######--></div>" + "\n"
+				short_html += "<div class=\"recent_posts_entry\"><a class=\"recent_post_title\" href=\"" + post_path + "\">" + title + "</a><span class=\"unix_ts recent_post_date\"><!--######rp_ts######--></span><div class=\"recent_post_categories\"><!--######rp_cats######--></div><div class=\"recent_post_content\">" + "\n"
 
 			}
 
@@ -145,8 +145,8 @@ func parse_post(post_path string, p string) {
 
 			if (full_html_started == false) {
 
-				// finish short_html
-				short_html += "</div>" + "\n"
+				// finish tags in short_html
+				short_html += "</div></div>" + "\n"
 
 				var rp_ts = strconv.FormatInt(get_post_ts(post_path, true), 10)
 				var rp_cats = ""
