@@ -10,7 +10,7 @@ Designs are HTML/CSS/Javascript.
 
 Content is updated every minute based on file system changes, without restarting the server.
 
-# installation
+# Installation
 
 ```
 git clone https://github.com/andrewhodel/dotblog
@@ -18,13 +18,13 @@ cd dotblog
 cp -r default_html main
 mkdir posts
 mkdir keys
+cp config_sample.json config.json
 ```
 
-1. Create the `keys` directory and place your TLS keys in it.
+1. Edit config.json
 
-* server.ca-bundle
-* server.crt
-* server.key
+* set the paths to your TLS keys or place the key data in config.json
+* set the fqdn (fully qualified domain name) of the server
 
 2. Install the required Go modules.
 
@@ -40,19 +40,19 @@ GO111MODULE=off go get -u github.com/andrewhodel/go-ip-ac
 
 `sudo GOPATH=/home/ec2-user/go GO111MODULE=off go run dotblog_server.go > /dev/null 2>&1 &` to run in the background.
 
-## style
+## Style
 
 Edit the files in `main/`, it's HTML, CSS and JavaScript.
 
 Only `index.html` is required.
 
-## .blog file format
+## .blog File Format
 
 These files are placed in `posts/`, read `post_template.blog` and copy it to a new file in `posts/` to create a new post.
 
 The file names create unique urls that will be indexed by search engines.
 
-### self signed certificate
+### Self Signed Certificate
 
 You can create self signed certificates.
 
@@ -62,11 +62,11 @@ openssl req -new -subj "/C=US/ST=Utah/CN=localhost" -newkey rsa:2048 -nodes -key
 openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt
 ```
 
-## upgrading
+## Upgrading
 
 `git pull` will upgrade .blog; `keys/`, `main/` and `posts/` are not modified.
 
-# donate
+# Donate
 
 ## Bitcoin
 BTC 39AXGv2up1Yk5QNeLHfQra815jaYv9HcJk
@@ -77,12 +77,12 @@ BTC 39AXGv2up1Yk5QNeLHfQra815jaYv9HcJk
 ## Paypal by QR Code
 ![Paypal QR Donation](/readme_resources/paypal_donate_qr.png "Paypal QR Donation")
 
-# verification
+# Verification
 
 The OP_RETURN data in this BTC transaction provides btc-blockchain-copy-count checksum verification of this repository, the associated github account, the files and the commit dates.
 
 https://blockstream.info/tx/9d014787b37a535085db55680b89b37cfc939ac61959e920051ac2720d5a3314?expand
 
-# license
+# License
 
 dotblog uses the MIT License

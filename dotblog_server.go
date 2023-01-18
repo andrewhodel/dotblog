@@ -18,6 +18,7 @@ import (
 	"net"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
 	"log"
 	"io"
 	"io/ioutil"
@@ -31,6 +32,16 @@ import (
 	"sort"
 )
 
+type Config struct {
+	SslKey				string	`json:"sslKey"`
+	SslCert				string	`json:"sslCert"`
+	SslCa				string	`json:"sslCa"`
+	LoadCertificatesFromFiles	bool	`json:"loadCertificatesFromFiles"`
+	Fqdn				string	`json:"fqdn"`
+	Port				int64	`json:"port"`
+	RedirectFromDefaultHttpPort	bool	`json:"redirectFromDefaultHttpPort"`
+}
+
 var updating_content = false
 var categories map[string] []string
 var new_categories map[string] []string
@@ -43,6 +54,7 @@ var content map[string] string
 var new_content map[string] string
 var sending_content = 0
 var ip_ac ipac.Ipac
+var config Config
 var mime_types map[string] string
 
 func parse_post(post_path string, p string) {
@@ -735,16 +747,41 @@ func main() {
 	// update content first to include all existing content if server is running
 	go content_loop()
 
-	var port int64 = 444;
+	// read the configuration file
+	cwd, cwd_err := os.Getwd()
+	if (cwd_err != nil) {
+		fmt.Println(cwd_err)
+		os.Exit(1)
+	}
+	config_file_data, err := ioutil.ReadFile(cwd + "/config.json")
 
-	tls_config, err := createServerConfig("./keys/server.ca-bundle", "./keys/server.crt", "./keys/server.key")
-	if err != nil {
-		fmt.Printf("tls config failed: %s\n", err.Error())
+	if (err != nil) {
+		fmt.Printf("Error reading configuration file ./config.json (" + cwd + "/config.json): %s\n", err)
+	}
+
+	config_json_err := json.Unmarshal(config_file_data, &config)
+	if (config_json_err != nil) {
+		fmt.Printf("Error decoding ./config.json: %s\n", config_json_err)
 		os.Exit(1)
 	}
 
+	var cert tls.Certificate
+	var cert_err error
+	if (config.LoadCertificatesFromFiles == true) {
+		cert, cert_err = tls.LoadX509KeyPair(config.SslCert, config.SslKey)
+	} else {
+		cert, cert_err = tls.X509KeyPair([]byte(config.SslCert), []byte(config.SslKey))
+	}
+
+	if cert_err != nil {
+		fmt.Printf("did not load TLS certificates: %s\n", cert_err)
+		os.Exit(1)
+	}
+
+	tls_config := tls.Config{Certificates: []tls.Certificate{cert}, ClientAuth: tls.VerifyClientCertIfGiven, ServerName: config.Fqdn}
+
 	// listen on tcp socket
-	ln, err := tls.Listen("tcp", ":" + strconv.FormatInt(port, 10), tls_config)
+	ln, err := tls.Listen("tcp", ":" + strconv.FormatInt(config.Port, 10), &tls_config)
 	if err != nil {
 		fmt.Printf("listen failed: %s\n", err.Error())
 		os.Exit(1)
@@ -792,7 +829,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Println("HTTPS Service Started on Port " + strconv.FormatInt(port, 10))
+	fmt.Println("HTTPS Service Started on Port " + strconv.FormatInt(config.Port, 10))
 
 }
 
