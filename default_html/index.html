@@ -179,12 +179,11 @@ var update_unix_ts = function() {
 }
 
 window.addEventListener('load', function() {
-
-	// update the unix timestamp to a readable format every 5 seconds
-	update_unix_ts();
-	setInterval(update_unix_ts, 1000 * 5)
-
 });
+
+// update the unix timestamp to a readable format every 5 seconds
+update_unix_ts();
+setInterval(update_unix_ts, 1000 * 5)
 
 </script>
 
