@@ -40,6 +40,8 @@ type Config struct {
 	Port				int64	`json:"port"`
 	RedirectFromDefaultHttpPort	bool	`json:"redirectFromDefaultHttpPort"`
 	IpacModuleDirectory		string	`json:"ipacModuleDirectory"`
+	RecentPostsCount		int	`json:"recentPostsCount"`
+	RecentPostsTitlesCount		int	`json:"recentPostsTitlesCount"`
 }
 
 var updating_content = false
@@ -315,9 +317,9 @@ func content_loop() {
 					var post_path = d
 					//var post_time = new_posts_by_date[d]
 
-					if (count < 20) {
+					if (count < config.RecentPostsCount) {
 
-						// only place the most recent 20 posts in short_posts_html
+						// only place the most recent configured number of posts in short_posts_html
 
 						for p := range short_posts {
 
@@ -330,9 +332,9 @@ func content_loop() {
 
 					}
 
-					if (count < 40) {
+					if (count < config.RecentPostsTitlesCount) {
 
-						// only place the most recent 40 posts in post_titles_html
+						// only place the most recent configured number of posts in post_titles_html
 
 						for t := range new_titles {
 

@@ -7,5 +7,7 @@
 "fqdn": "domain.com",
 "port": 443,
 "redirectFromDefaultHttpPort": true,
-"ipacModuleDirectory": "/home/ec2-user/go/src/github.com/andrewhodel/go-ip-ac"
+"ipacModuleDirectory": "/home/ec2-user/go/src/github.com/andrewhodel/go-ip-ac",
+"recentPostsCount": 40,
+"recentPostsTitlesCount": 80
 }
