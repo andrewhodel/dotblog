@@ -619,12 +619,13 @@ func handle_http_request(w http.ResponseWriter, r *http.Request) {
 			for (true) {
 				b := make([]byte, 1024)
 				n, read_err := f.Read(b)
-				if (read_err != nil) {
+				if (read_err != nil || b[0] == 0) {
 					// sent whole file or there was an error
 					break
 				}
 				_ = n
-				w.Write(b)
+				w.Write(b[:n])
+
 			}
 
 			f.Close()
