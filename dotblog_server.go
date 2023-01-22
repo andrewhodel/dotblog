@@ -16,6 +16,7 @@ import (
 	"os"
 	"time"
 	"net"
+	"math/rand"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
@@ -536,6 +537,15 @@ func handle_http_request(w http.ResponseWriter, r *http.Request) {
 
 	// add cache headers
 	w.Header().Set("Cache-Control", "max-age=604800")
+
+	// add random length header to prevent length based resource guessing, there may be random length TLS padding, this fixes it regardless
+	// requests should be sent in a random order also
+	var rand_len = rand.Intn(20)
+	var rl = ""
+	for r := 0; r<rand_len; r++ {
+		rl += "a"
+	}
+	w.Header().Set("RL", rl)
 
 	if (r.URL.Path == "/") {
 
