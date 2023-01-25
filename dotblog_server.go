@@ -536,7 +536,7 @@ func handle_http_request(w http.ResponseWriter, r *http.Request) {
 	sending_content = sending_content + 1
 
 	// add cache headers
-	w.Header().Set("Cache-Control", "max-age=604800")
+	w.Header().Set("Cache-Control", "max-age=0")
 
 	// add random length header to prevent length based resource guessing, there may be random length TLS padding, this fixes it regardless
 	// requests should be sent in a random order also
