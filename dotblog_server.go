@@ -535,9 +535,6 @@ func handle_http_request(w http.ResponseWriter, r *http.Request) {
 
 	sending_content = sending_content + 1
 
-	// add cache headers
-	w.Header().Set("Cache-Control", "max-age=0")
-
 	// add random length header to prevent length based resource guessing, there may be random length TLS padding, this fixes it regardless
 	// requests should be sent in a random order also
 	var rand_len = rand.Intn(20)
@@ -546,6 +543,9 @@ func handle_http_request(w http.ResponseWriter, r *http.Request) {
 		rl += "a"
 	}
 	w.Header().Set("RL", rl)
+
+	// add cache headers
+	w.Header().Set("Cache-Control", "max-age=0")
 
 	if (r.URL.Path == "/") {
 
@@ -612,6 +612,9 @@ func handle_http_request(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "text/html")
 			io.WriteString(w, "not found")
 		} else {
+
+			// add cache headers for files, 1 hour
+			w.Header().Set("Cache-Control", "max-age=3600")
 
 			// get extension
 			var ext_p = strings.Split(r.URL.Path, ".")
