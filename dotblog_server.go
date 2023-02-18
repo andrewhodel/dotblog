@@ -182,15 +182,24 @@ func parse_post(post_path string, p string) {
 
 		}
 
+		//fmt.Println("\nline: ", line)
+		//fmt.Println("full_html_started", full_html_started)
+		//fmt.Println("block_counter", block_counter)
+		//fmt.Println("newline_counter", newline_counter)
+
 		if (block_counter < 2) {
 			// newlines are not counted in the full post html
 			if (len(line) == 0 || line == "\r") {
 				// empty line or line with \r
 				newline_counter += 1
+			} else {
+				// line not empty, reset newline_counter
+				newline_counter = 0
 			}
 		}
 
 		if (newline_counter == 2) {
+			// new block every 3 newlines, visually 2 empty new lines
 			block_counter = block_counter + 1
 			newline_counter = 0
 		}
