@@ -41,6 +41,7 @@ type Config struct {
 	Port				int64	`json:"port"`
 	RedirectFromDefaultHttpPort	bool	`json:"redirectFromDefaultHttpPort"`
 	IpacModuleDirectory		string	`json:"ipacModuleDirectory"`
+	IpacBlockAfterNewConnections	int	`json:"ipacBlockAfterNewConnections"`
 	RecentPostsCount		int	`json:"recentPostsCount"`
 	RecentPostsTitlesCount		int	`json:"recentPostsTitlesCount"`
 }
@@ -759,6 +760,7 @@ func main() {
 
 	// set the module directory for ipac
 	ip_ac.ModuleDirectory = config.IpacModuleDirectory
+	ip_ac.BlockAfterNewConnections = config.IpacBlockAfterNewConnections
 
 	// update content first to include all existing content if server is running
 	go content_loop()
