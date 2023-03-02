@@ -612,46 +612,78 @@ func handle_http_request(w http.ResponseWriter, r *http.Request) {
 
 	} else {
 
-		// a file accessed by the browser, included in the /main directory
-		f, err := os.Open("main" + r.URL.Path)
+		fi, fi_err := os.Stat("main" + r.URL.Path)
 
-		if (err != nil) {
+		if (fi_err != nil) {
 
-			// file not found
+			// file or directory not found
 			w.WriteHeader(http.StatusNotFound)
 			w.Header().Set("Content-Type", "text/html")
 			io.WriteString(w, "not found")
+
 		} else {
 
-			// add cache headers for files, 1 hour
-			w.Header().Set("Cache-Control", "max-age=3600")
+			if (fi.IsDir() == true) {
 
-			// get extension
-			var ext_p = strings.Split(r.URL.Path, ".")
-			var ext = ""
-			if (len(ext_p) >= 2) {
-				ext = ext_p[len(ext_p) - 1]
-				w.Header().Set("Content-Type", mime_types[ext])
-			}
-
-			if (ext == "") {
-				w.Header().Set("Content-Type", "application/octet-stream")
-			}
-
-			// send content
-			for (true) {
-				b := make([]byte, 1350)
-				n, read_err := f.Read(b)
-				if (read_err != nil) {
-					// sent whole file or there was an error
-					break
+				// this is not a file, add index.html in the directory
+				if (r.URL.Path[len(r.URL.Path)-1] == 47) {
+					r.URL.Path += "index.html"
+				} else {
+					r.URL.Path += "/index.html"
 				}
-				_ = n
-				w.Write(b[:n])
 
 			}
 
-			f.Close()
+		}
+
+		if (fi_err == nil) {
+			// file or directory was found
+			// but it may be missing (this is the fastest way)
+			// because it could be index.html
+
+			// try to open file accessed by the browser, included in the /main directory
+			f, err := os.Open("main" + r.URL.Path)
+
+			if (err != nil) {
+
+				// file not found
+				w.WriteHeader(http.StatusNotFound)
+				w.Header().Set("Content-Type", "text/html")
+				io.WriteString(w, "not found")
+
+			} else {
+
+				// add cache headers for files, 1 hour
+				w.Header().Set("Cache-Control", "max-age=3600")
+
+				// get extension
+				var ext_p = strings.Split(r.URL.Path, ".")
+				var ext = ""
+				if (len(ext_p) >= 2) {
+					ext = ext_p[len(ext_p) - 1]
+					w.Header().Set("Content-Type", mime_types[ext])
+				}
+
+				if (ext == "") {
+					w.Header().Set("Content-Type", "application/octet-stream")
+				}
+
+				// send content
+				for (true) {
+					b := make([]byte, 1350)
+					n, read_err := f.Read(b)
+					if (read_err != nil) {
+						// sent whole file or there was an error
+						break
+					}
+					_ = n
+					w.Write(b[:n])
+
+				}
+
+				f.Close()
+
+			}
 
 		}
 
