@@ -790,10 +790,6 @@ func main() {
 	mime_types["js"] = "text/javascript"
 	mime_types["css"] = "text/css"
 
-	// set the module directory for ipac
-	ip_ac.ModuleDirectory = config.IpacModuleDirectory
-	ip_ac.BlockAfterNewConnections = config.IpacBlockAfterNewConnections
-
 	// update content first to include all existing content if server is running
 	go content_loop()
 
@@ -814,6 +810,10 @@ func main() {
 		fmt.Printf("Error decoding ./config.json: %s\n", config_json_err)
 		os.Exit(1)
 	}
+
+	// set the module directory for ipac
+	ip_ac.ModuleDirectory = config.IpacModuleDirectory
+	ip_ac.BlockAfterNewConnections = config.IpacBlockAfterNewConnections
 
 	var cert tls.Certificate
 	var cert_err error
