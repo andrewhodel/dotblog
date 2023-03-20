@@ -815,6 +815,9 @@ func main() {
 	ip_ac.ModuleDirectory = config.IpacModuleDirectory
 	ip_ac.BlockAfterNewConnections = config.IpacBlockAfterNewConnections
 
+	// go-ip-ac
+	ipac.Init(&ip_ac)
+
 	var cert tls.Certificate
 	var cert_err error
 	if (config.LoadCertificatesFromFiles == true) {
@@ -838,10 +841,51 @@ func main() {
 	}
 	defer ln.Close()
 
-	// go-ip-ac
-	ipac.Init(&ip_ac)
+	if (config.RedirectFromDefaultHttpPort == true) {
 
-	// invoke the HTTPS server
+		// HTTP server
+		ln, err := net.Listen("tcp", ":" + strconv.FormatInt(80, 10))
+		if err != nil {
+			// handle error
+			fmt.Printf("server: listen: %s\n", err)
+			os.Exit(1)
+		}
+
+		fmt.Println("redirecting HTTP requests on port 80 to " + strconv.FormatInt(config.Port, 10))
+
+		// start a subroutine
+		go func() {
+
+			for {
+				conn, err := ln.Accept()
+				if err != nil {
+					// handle error
+					continue
+				}
+				defer conn.Close()
+
+				// take the port number off the address
+				var ip, port, iperr = net.SplitHostPort(conn.RemoteAddr().String())
+				_ = port
+				_ = iperr
+
+				if (ipac.TestIpAllowed(&ip_ac, ip) == false) {
+					conn.Close()
+					continue
+				}
+
+				// this would normally be handled in a new subroutine
+				// but only a response is being written
+				conn.Write([]byte("HTTP/1.1 301 Moved Permanently\r\nLocation: https://" + config.Fqdn + "\r\n\r\n"))
+				conn.Close()
+
+			}
+
+		}()
+
+	}
+
+	// HTTPS server
 	srv := &http.Server{
 		// keep-alives are enabled by default
 		IdleTimeout: 5 * time.Second,
