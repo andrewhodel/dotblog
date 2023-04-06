@@ -1,5 +1,5 @@
 /*
-Copyright 2022 Andrew Hodel
+Copyright 2023 Andrew Hodel
 andrewhodel@gmail.com
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -20,13 +20,10 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
-	"log"
-	"io"
 	"io/ioutil"
 	"strings"
 	"strconv"
 	"bytes"
-	"net/http"
 	"github.com/andrewhodel/go-ip-ac"
 	"path/filepath"
 	"sort"
@@ -533,15 +530,109 @@ func content_loop() {
 
 }
 
-func handle_http_request(w http.ResponseWriter, r *http.Request) {
+func handle_http_request(conn net.Conn) {
 
 	// if changes to memory from files are processing, wait for the updated content map
 	if (updating_content == true) {
 		time.Sleep(time.Millisecond * 200)
 		// try again
-		handle_http_request(w, r)
+		handle_http_request(conn)
 		return
 	}
+
+	// parse HTTP/S request
+	var tlen = 0
+	var header_data []byte
+	var body_data []byte
+	var end_of_header = false
+	for true {
+
+		// set the read timeout for each read
+		conn.SetReadDeadline(time.Now().Add(time.Second * 2))
+
+		buf := make([]byte, 1500)
+		l, err := conn.Read(buf)
+
+		if (err != nil) {
+			// error reading request data
+			break
+		} else if (l == 0) {
+			// no more data
+			break
+		}
+
+		tlen += l
+
+		if (tlen > 2000) {
+			// request is too long
+			conn.Write([]byte("HTTP/1.1 400 request too long\r\n\r\n"))
+			conn.Close()
+			return
+		}
+
+		if (end_of_header == false) {
+
+			// add to header_data
+			for b := range buf {
+				header_data = append(header_data, buf[b])
+			}
+
+			// headers are incoming
+			var header_end_index = bytes.Index(header_data, []byte("\r\n\r\n"))
+
+			if (header_end_index > -1) {
+				// end of header is in header_data
+
+				if (header_end_index + 2 + 1 > len(header_data)) {
+
+					// there is body data in header_data
+					//fmt.Println("body data in header_data")
+
+				}
+
+				end_of_header = true
+
+				// parse headers
+				if (bytes.Index(header_data, []byte("GET ")) == 0) {
+					// no body data sent in a GET request
+					break
+				}
+
+			}
+
+		} else {
+
+			// add to body_data
+			for b := range(buf) {
+				body_data = append(body_data, buf[b])
+			}
+
+		}
+
+	}
+
+	// get request URL
+	var first_line_end = bytes.Index(header_data, []byte("\r\n"))
+
+	if (first_line_end == -1) {
+		// invalid request
+		conn.Close()
+		return
+	}
+
+	var first_line_space_split = bytes.Split(header_data[:first_line_end], []byte(" "))
+	var request_path string
+	if (len(first_line_space_split) < 3) {
+		// invalid request
+		// should be similar to GET / HTTP/1.1
+		conn.Close()
+		return
+	} else {
+		// the second item is the path
+		request_path = string(first_line_space_split[1])
+	}
+
+	var response_headers []byte
 
 	sending_content = sending_content + 1
 
@@ -552,26 +643,32 @@ func handle_http_request(w http.ResponseWriter, r *http.Request) {
 	for r := 0; r<rand_len; r++ {
 		rl += "a"
 	}
-	w.Header().Set("RL", rl)
+	response_headers = bytes.Join([][]byte{response_headers, []byte("RL: " + rl + "\r\n")}, nil)
 
 	// add cache headers
-	w.Header().Set("Cache-Control", "max-age=0")
+	response_headers = bytes.Join([][]byte{response_headers, []byte("Cache-Control: max-age=0\r\n")}, nil)
 
-	if (r.URL.Path == "/") {
+	if (request_path == "/") {
 
 		// main view
-		w.Header().Set("Content-Type", "text/html")
-		io.WriteString(w, content["url:/"])
+		response_headers = bytes.Join([][]byte{response_headers, []byte("Content-Type: text/html\r\n")}, nil)
+		conn.Write([]byte("HTTP/1.1 200\r\n"))
+		conn.Write(response_headers)
+		conn.Write([]byte("\r\n"))
+		conn.Write([]byte(content["url:/"]))
 
-	} else if (strings.Index(r.URL.Path, "/categories/") == 0) {
+	} else if (strings.Index(request_path, "/categories/") == 0) {
 
 		// get category
-		var cat = strings.TrimPrefix(r.URL.Path, "/categories/")
+		var cat = strings.TrimPrefix(request_path, "/categories/")
 
 		if (len(categories[cat]) > 0) {
 			// exists
-			w.Header().Set("Content-Type", "text/html")
-			io.WriteString(w, content["header"])
+			response_headers = bytes.Join([][]byte{response_headers, []byte("Content-Type: text/html\r\n")}, nil)
+			conn.Write([]byte("HTTP/1.1 200\r\n"))
+			conn.Write(response_headers)
+			conn.Write([]byte("\r\n"))
+			conn.Write([]byte(content["header"]))
 
 			var s = "<span class=\"category_title\">" + cat + "</span>"
 			for c := range categories[cat] {
@@ -583,53 +680,65 @@ func handle_http_request(w http.ResponseWriter, r *http.Request) {
 				s += "<div class=\"category_post_entry\"><a href=\"/" + post_path + "\" class=\"category_post_link\">" + title + "</a><span class=\"unix_ts category_post_date\">" + ts + "</span></div>"
 			}
 
-			io.WriteString(w, s + content["footer"])
+			conn.Write([]byte(s))
+			conn.Write([]byte(content["footer"]))
+
 		} else {
 			// does not exist
-			w.WriteHeader(http.StatusNotFound)
-			io.WriteString(w, "not found")
+			conn.Write([]byte("HTTP/1.1 404\r\n"))
+			conn.Write(response_headers)
+			conn.Write([]byte("\r\n"))
+			conn.Write([]byte("not found"))
 		}
 
-	} else if (strings.Index(r.URL.Path, "/posts/") == 0) {
+	} else if (strings.Index(request_path, "/posts/") == 0) {
 
 		// a post
-		if (content["url:" + r.URL.Path] == "") {
+		if (content["url:" + request_path] == "") {
 			// does not exist
-			w.WriteHeader(http.StatusNotFound)
-			w.Header().Set("Content-Type", "text/html")
-			io.WriteString(w, "not found")
+			response_headers = bytes.Join([][]byte{response_headers, []byte("Content-Type: text/html\r\n")}, nil)
+			conn.Write([]byte("HTTP/1.1 404\r\n"))
+			conn.Write(response_headers)
+			conn.Write([]byte("\r\n"))
+			conn.Write([]byte("not found"))
 		} else {
 			// exists
-			w.Header().Set("Content-Type", "text/html")
-			io.WriteString(w, content["header"] + content["url:" + r.URL.Path] + content["footer"])
+			response_headers = bytes.Join([][]byte{response_headers, []byte("Content-Type: text/html\r\n")}, nil)
+			conn.Write([]byte("HTTP/1.1 200\r\n"))
+			conn.Write(response_headers)
+			conn.Write([]byte("\r\n"))
+			conn.Write([]byte(content["header"] + content["url:" + request_path] + content["footer"]))
 		}
 
-	} else if (strings.Index(r.URL.Path, "/..") != -1) {
+	} else if (strings.Index(request_path, "/..") != -1) {
 
 		// invalid URL, someone is trying to access a file they should not be trying to access
-		w.WriteHeader(http.StatusForbidden)
-		io.WriteString(w, "")
+		conn.Write([]byte("HTTP/1.1 401\r\n"))
+		conn.Write(response_headers)
+		conn.Write([]byte("\r\n"))
 
 	} else {
 
-		fi, fi_err := os.Stat("main" + r.URL.Path)
+		fi, fi_err := os.Stat("main" + request_path)
 
 		if (fi_err != nil) {
 
 			// file or directory not found
-			w.WriteHeader(http.StatusNotFound)
-			w.Header().Set("Content-Type", "text/html")
-			io.WriteString(w, "not found")
+			response_headers = bytes.Join([][]byte{response_headers, []byte("Content-Type: text/html\r\n")}, nil)
+			conn.Write([]byte("HTTP/1.1 404\r\n"))
+			conn.Write(response_headers)
+			conn.Write([]byte("\r\n"))
+			conn.Write([]byte("not found"))
 
 		} else {
 
 			if (fi.IsDir() == true) {
 
 				// this is not a file, add index.html in the directory
-				if (r.URL.Path[len(r.URL.Path)-1] == 47) {
-					r.URL.Path += "index.html"
+				if (request_path[len(request_path)-1] == 47) {
+					request_path += "index.html"
 				} else {
-					r.URL.Path += "/index.html"
+					request_path += "/index.html"
 				}
 
 			}
@@ -642,31 +751,38 @@ func handle_http_request(w http.ResponseWriter, r *http.Request) {
 			// because it could be index.html
 
 			// try to open file accessed by the browser, included in the /main directory
-			f, err := os.Open("main" + r.URL.Path)
+			f, err := os.Open("main" + request_path)
 
 			if (err != nil) {
 
 				// file not found
-				w.WriteHeader(http.StatusNotFound)
-				w.Header().Set("Content-Type", "text/html")
-				io.WriteString(w, "not found")
+				//w.WriteHeader(http.StatusNotFound)
+				response_headers = bytes.Join([][]byte{response_headers, []byte("Content-Type: text/html\r\n")}, nil)
+				conn.Write([]byte("HTTP/1.1 404\r\n"))
+				conn.Write(response_headers)
+				conn.Write([]byte("\r\n"))
+				conn.Write([]byte("not found"))
 
 			} else {
 
 				// add cache headers for files, 1 hour
-				w.Header().Set("Cache-Control", "max-age=3600")
+				response_headers = bytes.Join([][]byte{response_headers, []byte("Cache-Control: max-age=3600\r\n")}, nil)
+				conn.Write([]byte("HTTP/1.1 200\r\n"))
 
 				// get extension
-				var ext_p = strings.Split(r.URL.Path, ".")
+				var ext_p = strings.Split(request_path, ".")
 				var ext = ""
 				if (len(ext_p) >= 2) {
 					ext = ext_p[len(ext_p) - 1]
-					w.Header().Set("Content-Type", mime_types[ext])
+					response_headers = bytes.Join([][]byte{response_headers, []byte("Content-Type: " + mime_types[ext] + "\r\n")}, nil)
 				}
 
 				if (ext == "") {
-					w.Header().Set("Content-Type", "application/octet-stream")
+					response_headers = bytes.Join([][]byte{response_headers, []byte("Content-Type: application/octet-stream\r\n")}, nil)
 				}
+
+				conn.Write(response_headers)
+				conn.Write([]byte("\r\n"))
 
 				// send content
 				for (true) {
@@ -677,7 +793,7 @@ func handle_http_request(w http.ResponseWriter, r *http.Request) {
 						break
 					}
 					_ = n
-					w.Write(b[:n])
+					conn.Write(b[:n])
 
 				}
 
@@ -690,6 +806,8 @@ func handle_http_request(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sending_content = sending_content - 1
+
+	conn.Close()
 
 }
 
@@ -841,6 +959,39 @@ func main() {
 	}
 	defer ln.Close()
 
+	// HTTPS server
+	// start a subroutine
+	go func() {
+
+		for {
+			conn, err := ln.Accept()
+			if err != nil {
+				// handle error
+				continue
+			}
+			defer conn.Close()
+
+			// take the port number off the address
+			var ip, port, iperr = net.SplitHostPort(conn.RemoteAddr().String())
+			_ = port
+			_ = iperr
+
+			if (ipac.TestIpAllowed(&ip_ac, ip) == false) {
+				conn.Close()
+				continue
+			}
+
+			// set the idle timeout
+			conn.SetDeadline(time.Now().Add(time.Second * 5))
+
+			go handle_http_request(conn)
+
+		}
+
+	}()
+
+	fmt.Println("HTTPS Service Started on Port " + strconv.FormatInt(config.Port, 10))
+
 	if (config.RedirectFromDefaultHttpPort == true) {
 
 		// HTTP server
@@ -874,6 +1025,9 @@ func main() {
 					continue
 				}
 
+				// set the idle timeout
+				conn.SetDeadline(time.Now().Add(time.Second * 5))
+
 				// this would normally be handled in a new subroutine
 				// but only a response is being written
 				conn.Write([]byte("HTTP/1.1 301 Moved Permanently\r\nLocation: https://" + config.Fqdn + "\r\n\r\n"))
@@ -885,102 +1039,7 @@ func main() {
 
 	}
 
-	// HTTPS server
-	srv := &http.Server{
-		// keep-alives are enabled by default
-		IdleTimeout: 5 * time.Second,
-		// this is required to find invalid TLS connections
-		ErrorLog: httpLogger(),
-		// no reason for this to be larger
-		MaxHeaderBytes: 1500,
-	}
-
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-
-		// slash is the catch all in golang
-
-		// take the port number off the address
-		var ip, port, iperr = net.SplitHostPort(r.RemoteAddr)
-		_ = port
-		_ = iperr
-
-		if (ipac.TestIpAllowed(&ip_ac, ip) == false) {
-			w.WriteHeader(http.StatusForbidden)
-			io.WriteString(w, "")
-			return
-		}
-
-		//fmt.Println("request", ip, r.URL.Path)
-
-		handle_http_request(w, r)
-
-	})
-
-	fmt.Println("HTTPS Service Starting on Port " + strconv.FormatInt(config.Port, 10))
-
-	https_err := srv.Serve(ln)
-	if https_err != nil {
-		fmt.Println("Error starting HTTPS Server")
-		fmt.Println(https_err)
-		os.Exit(1)
-	}
-
-}
-
-// a Writer and a Logger are needed for normal http logging
-type learnSwiftStructsTooWriter struct {
-}
-
-func (e learnSwiftStructsTooWriter) Len() (int) {
-
-	// return length of existing buffer
-	// Logger requires this
-	return 0
-
-}
-
-func (e learnSwiftStructsTooWriter) Write(p []byte) (int, error) {
-
-	//fmt.Printf("%s\n", p)
-
-	// create a failed TLS handshake with
-	// nc domain.tld 443 </dev/null
-	if (bytes.Index(p, []byte("TLS handshake error")) > -1) {
-		// get the ip address from
-		// http: TLS handshake error from 77.35.198.143:63185: EOF
-		// as sent from c.server.logf("http: TLS handshake error from %s: %v", c.rwc.RemoteAddr(), err) in the Go source
-		var s = bytes.Split(p, []byte(" "))
-		//fmt.Println(len(s))
-		if (len(s) >= 6) {
-			// string matches pattern
-			//fmt.Println(string(s[5]))
-			var ip_info = strings.Split(string(s[5]), ":")
-			//fmt.Println(len(ip_info))
-			if (len(ip_info) == 3) {
-				// valid by counting
-				var ip = ip_info[0]
-				//fmt.Println(ip)
-
-				// test the ip to increment the connection counters for this ip
-				ipac.TestIpAllowed(&ip_ac, ip)
-
-			}
-		}
-	}
-
-	// return (number of bytes written from p, err)
-	return len(p), nil
-
-}
-
-func httpLogger() *log.Logger {
-
-	buf := learnSwiftStructsTooWriter{}
-	// create a logger that uses a custom writer
-	// and no prefix
-	logger := log.New(buf, "", 0)
-
-	return logger
+	select{}
 
 }
 

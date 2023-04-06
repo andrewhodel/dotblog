@@ -17,7 +17,6 @@ git clone https://github.com/andrewhodel/dotblog
 cd dotblog
 cp -r default_html main
 mkdir posts
-mkdir keys
 cp config_sample.json config.json
 ```
 
@@ -58,6 +57,7 @@ The file names create unique urls that will be indexed by search engines.
 You can create self signed certificates.
 
 ```
+mkdir keys
 cd keys/
 openssl req -new -subj "/C=US/ST=Utah/CN=localhost" -newkey rsa:2048 -nodes -keyout server.key -out server.csr
 openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt
@@ -65,7 +65,7 @@ openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt
 
 ## Upgrading
 
-`git pull` will upgrade .blog; `keys/`, `main/` and `posts/` are not modified.
+`git pull` will upgrade .blog
 
 # Donate
 
