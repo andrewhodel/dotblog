@@ -16,6 +16,7 @@ import (
 	"os"
 	"time"
 	"net"
+	"net/url"
 	"math/rand"
 	"crypto/tls"
 	"crypto/x509"
@@ -634,6 +635,9 @@ func handle_http_request(conn net.Conn) {
 
 	var response_headers []byte
 
+	// parse the url
+	urlp, _ := url.Parse(request_path)
+
 	sending_content = sending_content + 1
 
 	// add random length header to prevent length based resource guessing, there may be random length TLS padding, this fixes it regardless
@@ -645,26 +649,25 @@ func handle_http_request(conn net.Conn) {
 	}
 	response_headers = bytes.Join([][]byte{response_headers, []byte("RL: " + rl + "\r\n")}, nil)
 
-	// add cache headers
-	response_headers = bytes.Join([][]byte{response_headers, []byte("Cache-Control: max-age=0\r\n")}, nil)
-
-	if (request_path == "/") {
+	if (urlp.Path == "/") {
 
 		// main view
 		response_headers = bytes.Join([][]byte{response_headers, []byte("Content-Type: text/html\r\n")}, nil)
+		response_headers = bytes.Join([][]byte{response_headers, []byte("Cache-Control: max-age=0\r\n")}, nil)
 		conn.Write([]byte("HTTP/1.1 200\r\n"))
 		conn.Write(response_headers)
 		conn.Write([]byte("\r\n"))
 		conn.Write([]byte(content["url:/"]))
 
-	} else if (strings.Index(request_path, "/categories/") == 0) {
+	} else if (strings.Index(urlp.Path, "/categories/") == 0) {
 
 		// get category
-		var cat = strings.TrimPrefix(request_path, "/categories/")
+		var cat = strings.TrimPrefix(urlp.Path, "/categories/")
 
 		if (len(categories[cat]) > 0) {
 			// exists
 			response_headers = bytes.Join([][]byte{response_headers, []byte("Content-Type: text/html\r\n")}, nil)
+			response_headers = bytes.Join([][]byte{response_headers, []byte("Cache-Control: max-age=0\r\n")}, nil)
 			conn.Write([]byte("HTTP/1.1 200\r\n"))
 			conn.Write(response_headers)
 			conn.Write([]byte("\r\n"))
@@ -691,10 +694,10 @@ func handle_http_request(conn net.Conn) {
 			conn.Write([]byte("not found"))
 		}
 
-	} else if (strings.Index(request_path, "/posts/") == 0) {
+	} else if (strings.Index(urlp.Path, "/posts/") == 0) {
 
 		// a post
-		if (content["url:" + request_path] == "") {
+		if (content["url:" + urlp.Path] == "") {
 			// does not exist
 			response_headers = bytes.Join([][]byte{response_headers, []byte("Content-Type: text/html\r\n")}, nil)
 			conn.Write([]byte("HTTP/1.1 404\r\n"))
@@ -704,13 +707,14 @@ func handle_http_request(conn net.Conn) {
 		} else {
 			// exists
 			response_headers = bytes.Join([][]byte{response_headers, []byte("Content-Type: text/html\r\n")}, nil)
+			response_headers = bytes.Join([][]byte{response_headers, []byte("Cache-Control: max-age=0\r\n")}, nil)
 			conn.Write([]byte("HTTP/1.1 200\r\n"))
 			conn.Write(response_headers)
 			conn.Write([]byte("\r\n"))
-			conn.Write([]byte(content["header"] + content["url:" + request_path] + content["footer"]))
+			conn.Write([]byte(content["header"] + content["url:" + urlp.Path] + content["footer"]))
 		}
 
-	} else if (strings.Index(request_path, "/..") != -1) {
+	} else if (strings.Index(urlp.Path, "/..") != -1) {
 
 		// invalid URL, someone is trying to access a file they should not be trying to access
 		conn.Write([]byte("HTTP/1.1 401\r\n"))
@@ -719,7 +723,7 @@ func handle_http_request(conn net.Conn) {
 
 	} else {
 
-		fi, fi_err := os.Stat("main" + request_path)
+		fi, fi_err := os.Stat("main" + urlp.Path)
 
 		if (fi_err != nil) {
 
@@ -735,10 +739,10 @@ func handle_http_request(conn net.Conn) {
 			if (fi.IsDir() == true) {
 
 				// this is not a file, add index.html in the directory
-				if (request_path[len(request_path)-1] == 47) {
-					request_path += "index.html"
+				if (urlp.Path[len(urlp.Path)-1] == 47) {
+					urlp.Path += "index.html"
 				} else {
-					request_path += "/index.html"
+					urlp.Path += "/index.html"
 				}
 
 			}
@@ -751,7 +755,7 @@ func handle_http_request(conn net.Conn) {
 			// because it could be index.html
 
 			// try to open file accessed by the browser, included in the /main directory
-			f, err := os.Open("main" + request_path)
+			f, err := os.Open("main" + urlp.Path)
 
 			if (err != nil) {
 
@@ -770,7 +774,7 @@ func handle_http_request(conn net.Conn) {
 				conn.Write([]byte("HTTP/1.1 200\r\n"))
 
 				// get extension
-				var ext_p = strings.Split(request_path, ".")
+				var ext_p = strings.Split(urlp.Path, ".")
 				var ext = ""
 				if (len(ext_p) >= 2) {
 					ext = ext_p[len(ext_p) - 1]
