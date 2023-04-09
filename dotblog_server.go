@@ -321,10 +321,20 @@ func content_loop() {
 
 		}
 
+		var completed_new_posts_by_date_paths []string
 		var count = 0
 		for k := range rev_sr {
 			for d := range new_posts_by_date {
-				if (rev_sr[k] == int(new_posts_by_date[d].Unix())) {
+
+				// find if path was already completed
+				var already_completed_path = false
+				for acpi := range completed_new_posts_by_date_paths {
+					if (completed_new_posts_by_date_paths[acpi] == d) {
+						already_completed_path = true
+					}
+				}
+
+				if (rev_sr[k] == int(new_posts_by_date[d].Unix()) && already_completed_path == false) {
 
 					var post_path = d
 					//var post_time = new_posts_by_date[d]
@@ -366,6 +376,9 @@ func content_loop() {
 					}
 
 					count += 1
+
+					// add to completed_new_posts_by_date_paths to allow posts with the same timestamp to be processed
+					completed_new_posts_by_date_paths = append(completed_new_posts_by_date_paths, post_path)
 
 					break
 				}
