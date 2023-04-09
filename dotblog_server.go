@@ -17,6 +17,7 @@ import (
 	"time"
 	"net"
 	"net/url"
+	"math"
 	"math/rand"
 	"crypto/tls"
 	"crypto/x509"
@@ -257,14 +258,16 @@ func content_loop() {
 		fmt.Println("filepath.Walk error:", err)
 	}
 
-	// check index.html
-	index_html, index_err := ioutil.ReadFile("main/index.html")
-	if (index_err != nil) {
-		fmt.Println("main/index.html does not exist")
-		os.Exit(1)
-	}
+	if (content["url_part_0:/"] == "" || update_content == true) {
 
-	if (string(index_html) != content["url:/"] || update_content == true) {
+		// the url / is empty or there are new posts
+
+		// read index.html
+		index_html, index_err := ioutil.ReadFile("main/index.html")
+		if (index_err != nil) {
+			fmt.Println("main/index.html does not exist")
+			os.Exit(1)
+		}
 
 		// main/index.html was modified
 		// or there are posts that are new or modified
@@ -295,7 +298,7 @@ func content_loop() {
 		}
 
 		// add all posts sorted by time to html blocks
-		var short_posts_html = ""
+		var short_posts_html []string
 		var post_titles_html = ""
 
 		// order new_posts_by_date
@@ -326,14 +329,24 @@ func content_loop() {
 					var post_path = d
 					//var post_time = new_posts_by_date[d]
 
+					// get the index of this page
+					var short_posts_html_index = int(math.Floor(float64(count) / float64(config.RecentPostsCount)))
+					//fmt.Println("short_posts_html_index", short_posts_html_index, "post_path", post_path)
+
+					if (short_posts_html_index >= len(short_posts_html)) {
+						// create this page in short_posts_html
+						short_posts_html = append(short_posts_html, "")
+					}
+
 					if (count < config.RecentPostsCount) {
 
-						// only place the most recent configured number of posts in short_posts_html
+						// append to the array of short_posts_html with each item representing the configured number of recent posts per page
 
 						for p := range short_posts {
 
 							if (post_path == p) {
-								short_posts_html += short_posts[p]
+								//short_posts_html += short_posts[p]
+								short_posts_html[short_posts_html_index] += short_posts[p]
 								break
 							}
 
@@ -343,7 +356,7 @@ func content_loop() {
 
 					if (count < config.RecentPostsTitlesCount) {
 
-						// only place the most recent configured number of posts in post_titles_html
+						// only place the configured number of most recent posts in post_titles_html
 
 						for t := range new_titles {
 
@@ -380,8 +393,8 @@ func content_loop() {
 
 			} else if (line == "<!-- ######posts###### -->") {
 
-				// add the most recent posts
-				lines[l] = short_posts_html
+				// leave this line to be replaced with each page data
+				lines[l] = line
 
 				// stop adding to the header after this
 				// to replace this segment with content if not index.html
@@ -411,7 +424,32 @@ func content_loop() {
 
 		}
 
-		new_content["url:/"] = new_index_html
+		// add new_index_html as / in two parts
+		var slash_parts = strings.Split(new_index_html, "<!-- ######posts###### -->")
+
+		if (len(slash_parts) == 2) {
+			// add both parts
+			new_content["url_part_0:/"] = slash_parts[0]
+			new_content["url_part_1:/"] = slash_parts[1]
+		} else {
+			// add first part only
+			new_content["url_part_0:/"] = slash_parts[0]
+			new_content["url_part_1:/"] = ""
+		}
+
+		// open page_links element
+		new_content["url_part_0:/"] += "<div id=\"page_links\">\n"
+
+		// add each most recent posts page
+		for p := range(short_posts_html) {
+			// add each page link
+			new_content["url_part_0:/"] += "<a href=\"/?page=" + strconv.Itoa(p) + "\">Page " + strconv.Itoa(p) + "</a>\n"
+			// add each page content
+			new_content["page:" + strconv.Itoa(p)] = short_posts_html[p]
+		}
+
+		// close page_links element
+		new_content["url_part_0:/"] += "</div>\n"
 
 		// add categories and post_titles to header and footer
 		header = strings.Replace(header, "<!-- ######categories###### -->", categories_html, 1)
@@ -651,13 +689,25 @@ func handle_http_request(conn net.Conn) {
 
 	if (urlp.Path == "/") {
 
-		// main view
+		var q = urlp.Query()
+
+		var p = q.Get("page")
+
+		if (p == "") {
+			// first page is default
+			p = "0"
+		}
+		//fmt.Println("page", p)
+
+		// main view, paginated
 		response_headers = bytes.Join([][]byte{response_headers, []byte("Content-Type: text/html\r\n")}, nil)
 		response_headers = bytes.Join([][]byte{response_headers, []byte("Cache-Control: max-age=0\r\n")}, nil)
 		conn.Write([]byte("HTTP/1.1 200\r\n"))
 		conn.Write(response_headers)
 		conn.Write([]byte("\r\n"))
-		conn.Write([]byte(content["url:/"]))
+		conn.Write([]byte(content["url_part_0:/"]))
+		conn.Write([]byte(content["page:" + p]))
+		conn.Write([]byte(content["url_part_1:/"]))
 
 	} else if (strings.Index(urlp.Path, "/categories/") == 0) {
 
