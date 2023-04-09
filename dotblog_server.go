@@ -338,18 +338,14 @@ func content_loop() {
 						short_posts_html = append(short_posts_html, "")
 					}
 
-					if (count < config.RecentPostsCount) {
+					// append to the array of short_posts_html with each item representing the configured number of recent posts per page
 
-						// append to the array of short_posts_html with each item representing the configured number of recent posts per page
+					for p := range short_posts {
 
-						for p := range short_posts {
-
-							if (post_path == p) {
-								//short_posts_html += short_posts[p]
-								short_posts_html[short_posts_html_index] += short_posts[p]
-								break
-							}
-
+						if (post_path == p) {
+							//short_posts_html += short_posts[p]
+							short_posts_html[short_posts_html_index] += short_posts[p]
+							break
 						}
 
 					}
