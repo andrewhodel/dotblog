@@ -696,7 +696,7 @@ func handle_http_request(conn net.Conn) {
 	}
 	response_headers = bytes.Join([][]byte{response_headers, []byte("RL: " + rl + "\r\n")}, nil)
 
-	if (urlp.Path == "/") {
+	if (urlp.Path == "/" || urlp.Path == "") {
 
 		var q = urlp.Query()
 
