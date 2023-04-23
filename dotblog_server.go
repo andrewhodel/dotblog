@@ -29,6 +29,8 @@ import (
 	"github.com/andrewhodel/go-ip-ac"
 	"path/filepath"
 	"sort"
+	"syscall"
+	"os/signal"
 )
 
 type Config struct {
@@ -946,6 +948,10 @@ func timeago(t time.Time) (string) {
 
 func main() {
 
+	sigs = make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	go sig_h()
+
 	new_categories = make(map[string] []string)
 	categories = make(map[string] []string)
 	new_posts_by_date = make(map[string] time.Time)
@@ -1132,4 +1138,18 @@ func createServerConfig(ca, crt, key string) (*tls.Config, error) {
 		ClientAuth:	tls.VerifyClientCertIfGiven,
 		ClientCAs:    roots,
 	}, nil
+}
+
+var sigs chan os.Signal
+func sig_h() {
+
+	sig := <-sigs
+
+	// log the ip_ac data
+	fmt.Printf("go-ip-ac IP information:\n%+v\n\n", ip_ac)
+
+	if (sig == os.Interrupt || sig == os.Kill || sig == syscall.SIGTERM) {
+		os.Exit(0)
+	}
+
 }
