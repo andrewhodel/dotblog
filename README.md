@@ -63,6 +63,14 @@ openssl req -new -subj "/C=US/ST=Utah/CN=localhost" -newkey rsa:2048 -nodes -key
 openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt
 ```
 
+## /path HTTP requests require <base> in the HTML
+
+Included HTML content with relative paths after a subdirectory in main will not work without `<base>`.
+
+https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+A slower method is a 3xx redirect to `/path/index.html` using the response headers to the `/path` request, it requires 2 requests.
+
 ## Upgrading
 
 `git pull` will upgrade .blog
