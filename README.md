@@ -63,9 +63,9 @@ openssl req -new -subj "/C=US/ST=Utah/CN=localhost" -newkey rsa:2048 -nodes -key
 openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt
 ```
 
-## /path HTTP requests require <base> in the HTML
+## /path HTTP requests require a trailing / or <base> in the HTML
 
-Included HTML content with relative paths after a subdirectory in main will not work without `<base>`.
+Included HTML content with relative paths after a subdirectory in main will not work without a trailing `/` or `<base>`.
 
 https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
 
