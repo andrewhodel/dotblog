@@ -75,6 +75,27 @@ A slower method is a 3xx redirect to `/path/index.html` using the response heade
 
 `git pull` will upgrade .blog
 
+## go-ip-ac Firewall Output
+
+Output the go-ip-ac information to stdout by sending SIGUSR1 to the process.
+
+```
+[ec2-user@ip dotblog]$ ps aux |grep dotblo
+root      3238  0.0  0.7 239820  7140 ?        S    02:09   0:00 sudo GOPATH=/home/ec2-user/go GO111MODULE=off go run dotblog_server.go
+root      3239  0.0  1.3 1161948 13388 ?       Sl   02:09   0:00 go run dotblog_server.go
+root      3277  0.0  1.4 1229652 14596 ?       Sl   02:09   0:04 /tmp/go-build1939384177/b001/exe/dotblog_server
+ec2-user 27352  0.0  0.0 119428   940 pts/1    S+   06:41   0:00 grep --color=auto dotblo
+[ec2-user@ip dotblog]$ sudo kill -s SIGUSR1 3277
+```
+
+```
+go-ip-ac IP information:
+{CleanupLoopSeconds:60 BlockForSeconds:86400 BlockIpv6SubnetsGroupDepth:4 BlockIpv6SubnetsBreach:40 WarnAfterNewConnections:80 WarnAfterUnauthedAttempts:5 BlockAfterNewConnections:1700 BlockAfterUnauthedAttempts:30 NotifyAfterAbsurdAuthAttempts:20 NotifyClosure:<nil> Purge:false LastCleanup:1683010756 LastNotifyAbsurd:1682924296 NextNotifyBlockedIps:[] NextNotifyAbsurdIps:[] Ips:[{Addr:8.8.8.8 Authed:false Warn:false Blocked:false LastAccess:1683010768 LastAuth:0 UnauthedNewConnections:1 UnauthedAttempts:0 AbsurdAuthAttempts:0} {Addr:8.8.8.7 Authed:false Warn:false Blocked:false LastAccess:1683010733 LastAuth:0 UnauthedNewConnections:1 UnauthedAttempts:0 AbsurdAuthAttempts:0}] Ipv6Subnets:[] TotalCount:2 BlockedCount:0 WarnCount:0 BlockedSubnetCount:0 ModuleDirectory:/home/ec2-user/go/src/github.com/andrewhodel/go-ip-ac NeverBlock:false}
+
+{Addr:8.8.8.8 Authed:false Warn:false Blocked:false LastAccess:1683010768 LastAuth:0 UnauthedNewConnections:1 UnauthedAttempts:0 AbsurdAuthAttempts:0}
+{Addr:8.8.8.7 Authed:false Warn:false Blocked:false LastAccess:1683010733 LastAuth:0 UnauthedNewConnections:1 UnauthedAttempts:0 AbsurdAuthAttempts:0}
+```
+
 # Donate
 
 ## Bitcoin
