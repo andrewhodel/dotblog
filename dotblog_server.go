@@ -1148,6 +1148,7 @@ func sig_h() {
 	//fmt.Println("signal", sig)
 
 	if (sig == syscall.SIGUSR1) {
+
 		// log the ip_ac data
 		fmt.Printf("\ngo-ip-ac IP information:\n%+v\n\n", ip_ac)
 
@@ -1156,7 +1157,16 @@ func sig_h() {
 		}
 
 	} else if (sig == os.Interrupt || sig == os.Kill || sig == syscall.SIGTERM) {
+
+		// log the ip_ac data
+		fmt.Printf("\ngo-ip-ac IP information:\n%+v\n\n", ip_ac)
+
+		for l := range(ip_ac.Ips) {
+			fmt.Printf("%+v\n", ip_ac.Ips[l])
+		}
+
 		os.Exit(0)
+
 	}
 
 	sig_h()
