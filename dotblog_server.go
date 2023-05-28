@@ -952,6 +952,24 @@ func main() {
 	signal.Notify(sigs)
 	go sig_h()
 
+	// read the configuration file
+	cwd, cwd_err := os.Getwd()
+	if (cwd_err != nil) {
+		fmt.Println(cwd_err)
+		os.Exit(1)
+	}
+	config_file_data, err := ioutil.ReadFile(cwd + "/config.json")
+
+	if (err != nil) {
+		fmt.Printf("Error reading configuration file ./config.json (" + cwd + "/config.json): %s\n", err)
+	}
+
+	config_json_err := json.Unmarshal(config_file_data, &config)
+	if (config_json_err != nil) {
+		fmt.Printf("Error decoding ./config.json: %s\n", config_json_err)
+		os.Exit(1)
+	}
+
 	new_categories = make(map[string] []string)
 	categories = make(map[string] []string)
 	new_posts_by_date = make(map[string] time.Time)
@@ -977,26 +995,7 @@ func main() {
 	mime_types["js"] = "text/javascript"
 	mime_types["css"] = "text/css"
 
-	// update content first to include all existing content if server is running
 	go content_loop()
-
-	// read the configuration file
-	cwd, cwd_err := os.Getwd()
-	if (cwd_err != nil) {
-		fmt.Println(cwd_err)
-		os.Exit(1)
-	}
-	config_file_data, err := ioutil.ReadFile(cwd + "/config.json")
-
-	if (err != nil) {
-		fmt.Printf("Error reading configuration file ./config.json (" + cwd + "/config.json): %s\n", err)
-	}
-
-	config_json_err := json.Unmarshal(config_file_data, &config)
-	if (config_json_err != nil) {
-		fmt.Printf("Error decoding ./config.json: %s\n", config_json_err)
-		os.Exit(1)
-	}
 
 	// set the module directory for ipac
 	ip_ac.ModuleDirectory = config.IpacModuleDirectory
