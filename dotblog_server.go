@@ -685,7 +685,15 @@ func handle_http_request(conn net.Conn) {
 	var response_headers []byte
 
 	// parse the url
-	urlp, _ := url.Parse(request_path)
+	urlp, urlp_err := url.Parse(request_path)
+
+	if (urlp_err != nil) {
+		conn.Write([]byte("HTTP/1.1 404\r\n"))
+		conn.Write([]byte("\r\n"))
+		conn.Write([]byte("not found"))
+		conn.Close()
+		return
+	}
 
 	sending_content = sending_content + 1
 
