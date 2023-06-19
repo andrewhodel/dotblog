@@ -18,7 +18,10 @@ import (
 	"net"
 	"net/url"
 	"math"
-	"math/rand"
+	"crypto/rand"
+	mrand "math/rand"
+	"encoding/pem"
+	"errors"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
@@ -699,7 +702,7 @@ func handle_http_request(conn net.Conn) {
 
 	// add random length header to prevent length based resource guessing, there may be random length TLS padding, this fixes it regardless
 	// requests should be sent in a random order also
-	var rand_len = rand.Intn(20)
+	var rand_len = mrand.Intn(20)
 	var rl = ""
 	for r := 0; r<rand_len; r++ {
 		rl += "a"
@@ -954,6 +957,28 @@ func timeago(t time.Time) (string) {
 
 }
 
+func CertFromPemBytes(bytes []byte, password string) (tls.Certificate, error) {
+	var cert tls.Certificate
+	var block *pem.Block
+	for {
+		block, bytes = pem.Decode(bytes)
+		if block == nil {
+			break
+		}
+
+		if block.Type == "CERTIFICATE" {
+			cert.Certificate = append(cert.Certificate, block.Bytes)
+		}
+	}
+	if len(cert.Certificate) == 0 {
+		return tls.Certificate{}, errors.New("no certificate")
+	}
+	if c, e := x509.ParseCertificate(cert.Certificate[0]); e == nil {
+		cert.Leaf = c
+	}
+	return cert, nil
+}
+
 func main() {
 
 	sigs = make(chan os.Signal, 1)
@@ -1013,19 +1038,32 @@ func main() {
 	ipac.Init(&ip_ac)
 
 	var cert tls.Certificate
-	var cert_err error
+	var tls_err error
+	var rootca []byte
 	if (config.LoadCertificatesFromFiles == true) {
-		cert, cert_err = tls.LoadX509KeyPair(config.SslCert, config.SslKey)
+		cert, tls_err = tls.LoadX509KeyPair(config.SslCert, config.SslKey)
+		rootca, _ = os.ReadFile(config.SslCa)
 	} else {
-		cert, cert_err = tls.X509KeyPair([]byte(config.SslCert), []byte(config.SslKey))
+		cert, tls_err = tls.X509KeyPair([]byte(config.SslCert), []byte(config.SslKey))
+		rootca = []byte(config.SslCa)
 	}
 
-	if cert_err != nil {
-		fmt.Printf("did not load TLS certificates: %s\n", cert_err)
+	if err != nil {
+		fmt.Printf("SMTP server did not load TLS certificates: %s\n", tls_err)
 		os.Exit(1)
 	}
 
-	tls_config := tls.Config{Certificates: []tls.Certificate{cert}, ClientAuth: tls.VerifyClientCertIfGiven, ServerName: config.Fqdn}
+	rootcert, rootcert_err := CertFromPemBytes(rootca, "")
+	if (rootcert_err == nil) {
+		// add the CA to the certificate chain (as NodeJS does by default)
+		for l := range(rootcert.Certificate) {
+			cert.Certificate = append(cert.Certificate, rootcert.Certificate[l])
+		}
+		cert.Leaf = rootcert.Leaf
+	}
+
+	tls_config := tls.Config{Certificates: []tls.Certificate{cert}, ClientAuth: tls.VerifyClientCertIfGiven, MinVersion: tls.VersionTLS12, ServerName: config.Fqdn}
+	tls_config.Rand = rand.Reader
 
 	// listen on tcp socket
 	ln, err := tls.Listen("tcp", ":" + strconv.FormatInt(config.Port, 10), &tls_config)
