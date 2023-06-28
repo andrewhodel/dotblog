@@ -1225,7 +1225,7 @@ func sig_h() {
 			fmt.Printf("%+v\n", ip_ac.Ips[l])
 		}
 
-		fmt.Println("\nconnection_count every 2 seconds since", time.Now())
+		fmt.Println("\n400 connection_count values, each 2 more seconds before", time.Now())
 		fmt.Println(connection_counts)
 		fmt.Println("")
 
