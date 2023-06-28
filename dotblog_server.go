@@ -50,6 +50,8 @@ type Config struct {
 	RecentPostsTitlesCount		int	`json:"recentPostsTitlesCount"`
 }
 
+var connection_count = 0
+var connection_counts []int
 var updating_content = false
 var categories map[string] []string
 var new_categories map[string] []string
@@ -215,6 +217,21 @@ func parse_post(post_path string, p string) {
 	new_content["url:/" + post_path] = full_html + "</div></div>"
 
 	return
+
+}
+
+func connection_count_loop() {
+
+	// keep a log of connection_count every 2 seconds
+	connection_counts = append(connection_counts, connection_count)
+	// that is 400 entries long
+	if (len(connection_counts) > 400) {
+		// remove the first
+		connection_counts = connection_counts[1:len(connection_counts)]
+	}
+
+	time.Sleep(time.Second * 2)
+	go connection_count_loop()
 
 }
 
@@ -1029,6 +1046,7 @@ func main() {
 	mime_types["css"] = "text/css"
 
 	go content_loop()
+	go connection_count_loop()
 
 	// set the module directory for ipac
 	ip_ac.ModuleDirectory = config.IpacModuleDirectory
@@ -1049,7 +1067,7 @@ func main() {
 	}
 
 	if err != nil {
-		fmt.Printf("SMTP server did not load TLS certificates: %s\n", tls_err)
+		fmt.Printf("HTTPS server did not load TLS certificates: %s\n", tls_err)
 		os.Exit(1)
 	}
 
@@ -1068,7 +1086,7 @@ func main() {
 	// listen on tcp socket
 	ln, err := tls.Listen("tcp", ":" + strconv.FormatInt(config.Port, 10), &tls_config)
 	if err != nil {
-		fmt.Printf("listen failed: %s\n", err.Error())
+		fmt.Printf("HTTPS server listen failed: %s\n", err.Error())
 		os.Exit(1)
 	}
 	defer ln.Close()
@@ -1078,6 +1096,9 @@ func main() {
 	go func() {
 
 		for {
+
+			connection_count += 1
+
 			conn, err := ln.Accept()
 			if err != nil {
 				// handle error
@@ -1104,7 +1125,7 @@ func main() {
 
 	}()
 
-	fmt.Println("HTTPS Service Started on Port " + strconv.FormatInt(config.Port, 10))
+	fmt.Println("HTTPS server started on port " + strconv.FormatInt(config.Port, 10))
 
 	if (config.RedirectFromDefaultHttpPort == true) {
 
@@ -1112,7 +1133,7 @@ func main() {
 		ln, err := net.Listen("tcp", ":" + strconv.FormatInt(80, 10))
 		if err != nil {
 			// handle error
-			fmt.Printf("server: listen: %s\n", err)
+			fmt.Printf("HTTP server listen failed: %s\n", err)
 			os.Exit(1)
 		}
 
@@ -1122,6 +1143,9 @@ func main() {
 		go func() {
 
 			for {
+
+				connection_count += 1
+
 				conn, err := ln.Accept()
 				if err != nil {
 					// handle error
@@ -1192,7 +1216,7 @@ func sig_h() {
 
 	//fmt.Println("signal", sig)
 
-	if (sig == syscall.SIGUSR1) {
+	if (sig == syscall.SIGUSR1 || sig == os.Interrupt || sig == os.Kill || sig == syscall.SIGTERM) {
 
 		// log the ip_ac data
 		fmt.Printf("\ngo-ip-ac IP information:\n%+v\n\n", ip_ac)
@@ -1201,15 +1225,15 @@ func sig_h() {
 			fmt.Printf("%+v\n", ip_ac.Ips[l])
 		}
 
-	} else if (sig == os.Interrupt || sig == os.Kill || sig == syscall.SIGTERM) {
+		fmt.Println("\nconnection_count every 2 seconds since", time.Now())
+		fmt.Println(connection_counts)
+		fmt.Println("")
 
-		// log the ip_ac data
-		fmt.Printf("\ngo-ip-ac IP information:\n%+v\n\n", ip_ac)
+	}
 
-		for l := range(ip_ac.Ips) {
-			fmt.Printf("%+v\n", ip_ac.Ips[l])
-		}
+	if (sig == os.Interrupt || sig == os.Kill || sig == syscall.SIGTERM) {
 
+		// exit after printing log data
 		os.Exit(0)
 
 	}
