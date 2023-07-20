@@ -615,7 +615,19 @@ func handle_http_request(conn net.Conn) {
 	var header_data []byte
 	var body_data []byte
 	var end_of_header = false
+	var content_length = -1
 	for true {
+
+		if (content_length > -1) {
+
+			if (len(body_data) >= content_length) {
+				// do not wait for the read deadline
+				// all the data has been sent
+				body_data = body_data[:content_length]
+				break
+			}
+
+		}
 
 		// set the read timeout for each read
 		conn.SetReadDeadline(time.Now().Add(time.Second * 2))
@@ -625,9 +637,7 @@ func handle_http_request(conn net.Conn) {
 
 		if (err != nil) {
 			// error reading request data
-			break
-		} else if (l == 0) {
-			// no more data
+			//fmt.Println("http/s server read error:", err)
 			break
 		}
 
@@ -647,25 +657,47 @@ func handle_http_request(conn net.Conn) {
 				header_data = append(header_data, buf[b])
 			}
 
-			// headers are incoming
+			// find the end of the headers
 			var header_end_index = bytes.Index(header_data, []byte("\r\n\r\n"))
 
 			if (header_end_index > -1) {
-				// end of header is in header_data
 
-				if (header_end_index + 2 + 1 > len(header_data)) {
+				// end of header is in header_data
+				end_of_header = true
+
+				if (bytes.Index(header_data, []byte("GET ")) == 0) {
+					// no body data sent in a GET request
+					header_data = header_data[0:header_end_index]
+					// no more data allowed
+					break
+				} else if (header_end_index + 4 < len(header_data)) {
+
+					// this is a request type other than GET
+
+					// avoid waiting for the read deadline
+					// that could be caused by no content-length header being sent in the request
+					// if there is a content-length header
+					var content_length_header_start = bytes.Index(bytes.ToLower(header_data), []byte("content-length:"))
+
+					if (content_length_header_start > -1) {
+
+						var content_length_header_end = bytes.Index(header_data[content_length_header_start:], []byte("\r\n"))
+
+						if (content_length_header_end > -1) {
+
+							var content_length_header = header_data[content_length_header_start:content_length_header_start + content_length_header_end]
+
+							content_length, _ = strconv.Atoi(string(content_length_header[len("content-length: "):len(content_length_header)]))
+
+						}
+					}
 
 					// there is body data in header_data
 					//fmt.Println("body data in header_data")
 
-				}
+					body_data = header_data[header_end_index:]
+					header_data = header_data[0:header_end_index]
 
-				end_of_header = true
-
-				// parse headers
-				if (bytes.Index(header_data, []byte("GET ")) == 0) {
-					// no body data sent in a GET request
-					break
 				}
 
 			}
