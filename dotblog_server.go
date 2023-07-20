@@ -695,7 +695,7 @@ func handle_http_request(conn net.Conn) {
 					// there is body data in header_data
 					//fmt.Println("body data in header_data")
 
-					body_data = header_data[header_end_index:]
+					body_data = header_data[header_end_index + 4:]
 					header_data = header_data[0:header_end_index]
 
 				}
@@ -734,8 +734,6 @@ func handle_http_request(conn net.Conn) {
 		request_path = string(first_line_space_split[1])
 	}
 
-	var response_headers []byte
-
 	// parse the url
 	urlp, urlp_err := url.Parse(request_path)
 
@@ -746,6 +744,8 @@ func handle_http_request(conn net.Conn) {
 		conn.Close()
 		return
 	}
+
+	var response_headers []byte
 
 	sending_content = sending_content + 1
 
