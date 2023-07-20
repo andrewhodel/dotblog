@@ -616,18 +616,10 @@ func handle_http_request(conn net.Conn) {
 	var body_data []byte
 	var end_of_header = false
 	var content_length = -1
+	var read_body_data = false
+
+	// read header data
 	for true {
-
-		if (content_length > -1) {
-
-			if (len(body_data) >= content_length) {
-				// do not wait for the read deadline
-				// all the data has been sent
-				body_data = body_data[:content_length]
-				break
-			}
-
-		}
 
 		// set the read timeout for each read
 		conn.SetReadDeadline(time.Now().Add(time.Second * 2))
@@ -644,8 +636,8 @@ func handle_http_request(conn net.Conn) {
 		tlen += l
 
 		if (tlen > 2000) {
-			// request is too long
-			conn.Write([]byte("HTTP/1.1 400 request too long\r\n\r\n"))
+			// headers too long
+			conn.Write([]byte("HTTP/1.1 400 headers too long\r\n\r\n"))
 			conn.Close()
 			return
 		}
@@ -673,6 +665,7 @@ func handle_http_request(conn net.Conn) {
 				} else if (header_end_index + 4 < len(header_data)) {
 
 					// this is a request type other than GET
+					read_body_data = true
 
 					// avoid waiting for the read deadline
 					// that could be caused by no content-length header being sent in the request
@@ -700,13 +693,6 @@ func handle_http_request(conn net.Conn) {
 
 				}
 
-			}
-
-		} else {
-
-			// add to body_data
-			for b := range(buf) {
-				body_data = append(body_data, buf[b])
 			}
 
 		}
@@ -743,6 +729,55 @@ func handle_http_request(conn net.Conn) {
 		conn.Write([]byte("not found"))
 		conn.Close()
 		return
+	}
+
+	// process URL authentication before reading body data
+
+	if (read_body_data == true) {
+
+		// read body data
+		tlen = 0
+		for true {
+
+			if (content_length > -1) {
+
+				if (len(body_data) >= content_length) {
+					// do not wait for the read deadline
+					// all the data has been sent
+					body_data = body_data[:content_length]
+					break
+				}
+
+			}
+
+			// set the read timeout for each read
+			conn.SetReadDeadline(time.Now().Add(time.Second * 2))
+
+			buf := make([]byte, 1500)
+			l, err := conn.Read(buf)
+
+			if (err != nil) {
+				// error reading request data
+				//fmt.Println("http/s server read error:", err)
+				break
+			}
+
+			tlen += l
+
+			if (tlen > 2000) {
+				// body is too long
+				conn.Write([]byte("HTTP/1.1 400 body too long\r\n\r\n"))
+				conn.Close()
+				return
+			}
+
+			// add to body_data
+			for b := range(buf) {
+				body_data = append(body_data, buf[b])
+			}
+
+		}
+
 	}
 
 	var response_headers []byte
