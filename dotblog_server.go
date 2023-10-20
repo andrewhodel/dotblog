@@ -879,7 +879,9 @@ func handle_http_request(conn net.Conn) {
 
 	} else {
 
-		fi, fi_err := os.Stat("main" + urlp.Path)
+		fi, fi_err := os.Lstat("main" + urlp.Path)
+
+		var redirect = false
 
 		if (fi_err != nil) {
 
@@ -892,20 +894,88 @@ func handle_http_request(conn net.Conn) {
 
 		} else {
 
-			if (fi.IsDir() == true) {
+			var continue_after_link = true
 
-				// this is not a file, add index.html in the directory
+			if (fi.Mode()&os.ModeSymlink != 0) {
+
+				// this is a link, find the target
+				continue_after_link = false
+				rpath, rl_err := os.Readlink("main" + urlp.Path)
+				if (rl_err != nil) {
+
+					// link has no target
+					response_headers = bytes.Join([][]byte{response_headers, []byte("Content-Type: text/html\r\n")}, nil)
+					conn.Write([]byte("HTTP/1.1 404\r\n"))
+					conn.Write(response_headers)
+					conn.Write([]byte("\r\n"))
+					conn.Write([]byte("not found"))
+
+				} else {
+
+					// the target is real, solve if it is a directory or a file
+					// set fi to the real path
+					// links to links fail after the first link
+
+					fi, fi_err = os.Lstat(rpath)
+
+					if (fi_err != nil) {
+
+						// linked file or directory not found
+						response_headers = bytes.Join([][]byte{response_headers, []byte("Content-Type: text/html\r\n")}, nil)
+						conn.Write([]byte("HTTP/1.1 404\r\n"))
+						conn.Write(response_headers)
+						conn.Write([]byte("\r\n"))
+						conn.Write([]byte("not found"))
+
+					} else {
+
+						if (fi.Mode()&os.ModeSymlink != 0) {
+
+							// link to a link
+							response_headers = bytes.Join([][]byte{response_headers, []byte("Content-Type: text/html\r\n")}, nil)
+							conn.Write([]byte("HTTP/1.1 404\r\n"))
+							conn.Write(response_headers)
+							conn.Write([]byte("\r\n"))
+							conn.Write([]byte("link to link error"))
+
+						} else {
+
+							// link file or directory found
+							continue_after_link = true
+
+						}
+
+					}
+
+				}
+
+			}
+
+			if (fi_err == nil && fi.IsDir() == true && continue_after_link == true) {
+
+				// this is not a file, add index.html to the path
 				if (urlp.Path[len(urlp.Path)-1] == 47) {
 					urlp.Path += "index.html"
 				} else {
-					urlp.Path += "/index.html"
+					// must redirect to /
+					urlp.Path += "/"
+					redirect = true
 				}
 
 			}
 
 		}
 
-		if (fi_err == nil) {
+		if (redirect == true) {
+
+			// redirect to add / to end of path
+			// domain.tld/path was typed and must be domain.tld/path/
+			response_headers = bytes.Join([][]byte{response_headers, []byte("Location: " + urlp.Path + "\r\n")}, nil)
+			conn.Write([]byte("HTTP/1.1 302 Found\r\n"))
+			conn.Write(response_headers)
+			conn.Write([]byte("\r\n"))
+
+		} else if (fi_err == nil) {
 			// file or directory was found
 			// but it may be missing (this is the fastest way)
 			// because it could be index.html
