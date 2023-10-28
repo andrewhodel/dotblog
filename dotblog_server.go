@@ -709,6 +709,7 @@ func handle_http_request(conn net.Conn) {
 	}
 
 	var first_line_space_split = bytes.Split(header_data[:first_line_end], []byte(" "))
+
 	var request_path string
 	if (len(first_line_space_split) < 3) {
 		// invalid request
@@ -1303,9 +1304,41 @@ func main() {
 				// set the idle timeout
 				conn.SetDeadline(time.Now().Add(time.Second * 5))
 
-				// this would normally be handled in a new subroutine
-				// but only a response is being written
-				conn.Write([]byte("HTTP/1.1 301 Moved Permanently\r\nLocation: https://" + config.Fqdn + "\r\n\r\n"))
+				// read the first line
+				buf := make([]byte, 400)
+				_, err = conn.Read(buf)
+
+				if (err != nil) {
+					// error reading request data
+					//fmt.Println("http/s server read error:", err)
+					break
+				}
+
+				var request_path string = "/"
+
+				var lines = bytes.SplitN(buf, []byte("\r\n"), 2)
+				if (len(lines) == 2) {
+
+					var parts = bytes.Split(lines[0], []byte(" "))
+
+					if (len(parts)< 3) {
+						// invalid request
+						// should be similar to GET / HTTP/1.1
+						conn.Close()
+						break
+					} else {
+						// the second item is the path
+						request_path = string(parts[1])
+					}
+
+				}
+
+				if (config.Port != 443) {
+					// add the not standard HTTPS port to the redirect url
+					request_path = ":" + strconv.FormatInt(config.Port, 10) + request_path
+				}
+
+				conn.Write([]byte("HTTP/1.1 301 Moved Permanently\r\nLocation: https://" + config.Fqdn + request_path + "\r\n\r\n"))
 				conn.Close()
 
 			}
