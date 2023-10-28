@@ -1311,7 +1311,8 @@ func main() {
 				if (err != nil) {
 					// error reading request data
 					//fmt.Println("http/s server read error:", err)
-					break
+					conn.Close()
+					continue
 				}
 
 				var request_path string = "/"
@@ -1321,11 +1322,9 @@ func main() {
 
 					var parts = bytes.Split(lines[0], []byte(" "))
 
-					if (len(parts)< 3) {
-						// invalid request
+					if (len(parts) < 3) {
+						// invalid request, redirect to config.Fqdn
 						// should be similar to GET / HTTP/1.1
-						conn.Close()
-						break
 					} else {
 						// the second item is the path
 						request_path = string(parts[1])
