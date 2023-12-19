@@ -1407,6 +1407,6 @@ func sig_h() {
 
 	}
 
-	sig_h()
+	go sig_h()
 
 }
