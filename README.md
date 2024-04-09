@@ -107,11 +107,19 @@ BTC 39AXGv2up1Yk5QNeLHfQra815jaYv9HcJk
 ## Paypal by QR Code
 ![Paypal QR Donation](/readme_resources/paypal_donate_qr.png "Paypal QR Donation")
 
-# Verification
+# Verification of Authorship
 
-The OP_RETURN data in this BTC transaction provides btc-blockchain-copy-count checksum verification of this repository, the associated github account, the files and the commit dates.
+The OP_RETURN data in this BTC transaction provides a sha256 checksum of the project file.  The BTC transaction provides a transaction date.  The file contains the author and the work.
 
-https://blockstream.info/tx/9d014787b37a535085db55680b89b37cfc939ac61959e920051ac2720d5a3314?expand
+https://blockstream.info/tx/654e13cbd4c0730847d7673175d5783282d3130c43a3bcc0f5887a669ea01ec1?expand
+
+dotblog_server.go
+
+        commit                  53e288c722c0e7419515d19c3397874f259d77d4
+        sha256                  553dd64ab3cf65129ee15d2a66dbdef4fac30da0e6914079d00804f4e916751c
+        op_return               7368613235362035353364643634616233636636353132396565313564326136366462646566346661633330646130653639313430373964303038303466346539313637353163
+        bitcoin transaction     654e13cbd4c0730847d7673175d5783282d3130c43a3bcc0f5887a669ea01ec1
+        date                    4/9/2024
 
 # License
 
