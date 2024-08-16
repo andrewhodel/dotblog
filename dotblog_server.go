@@ -25,7 +25,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
-	"io/ioutil"
 	"strings"
 	"strconv"
 	"bytes"
@@ -264,7 +263,7 @@ func content_loop() {
 
 			//fmt.Println("path:", path, info.Size())
 
-			var fc, rf_err = ioutil.ReadFile(path)
+			var fc, rf_err = os.ReadFile(path)
 			if (content["url:/" + path] != string(fc) && rf_err == nil) {
 				parse_post(string(path), string(fc))
 				update_content = true
@@ -285,7 +284,7 @@ func content_loop() {
 		// the url / is empty or there are new posts
 
 		// read index.html
-		index_html, index_err := ioutil.ReadFile("main/index.html")
+		index_html, index_err := os.ReadFile("main/index.html")
 		if (index_err != nil) {
 			fmt.Println("main/index.html does not exist")
 			os.Exit(1)
@@ -1146,7 +1145,7 @@ func main() {
 		fmt.Println(cwd_err)
 		os.Exit(1)
 	}
-	config_file_data, err := ioutil.ReadFile(cwd + "/config.json")
+	config_file_data, err := os.ReadFile(cwd + "/config.json")
 
 	if (err != nil) {
 		fmt.Printf("Error reading configuration file ./config.json (" + cwd + "/config.json): %s\n", err)
@@ -1204,7 +1203,7 @@ func main() {
 		rootca = []byte(config.SslCa)
 	}
 
-	if err != nil {
+	if tls_err != nil {
 		fmt.Printf("HTTPS server did not load TLS certificates: %s\n", tls_err)
 		os.Exit(1)
 	}
@@ -1359,7 +1358,7 @@ func createServerConfig(ca, crt, key string) (*tls.Config, error) {
 
 	roots := x509.NewCertPool()
 
-	caCertPEM, err := ioutil.ReadFile(ca)
+	caCertPEM, err := os.ReadFile(ca)
 	if err != nil {
 		fmt.Println("CA file not required, but not validated either:", err)
 	} else {
