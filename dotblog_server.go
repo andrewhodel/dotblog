@@ -1354,34 +1354,6 @@ func main() {
 
 }
 
-func createServerConfig(ca, crt, key string) (*tls.Config, error) {
-
-	roots := x509.NewCertPool()
-
-	caCertPEM, err := os.ReadFile(ca)
-	if err != nil {
-		fmt.Println("CA file not required, but not validated either:", err)
-	} else {
-
-		ok := roots.AppendCertsFromPEM(caCertPEM)
-		if !ok {
-			panic("failed to parse root certificate")
-		}
-
-	}
-
-	cert, err := tls.LoadX509KeyPair(crt, key)
-	if err != nil {
-		return nil, err
-	}
-
-	return &tls.Config{
-		Certificates: []tls.Certificate{cert},
-		ClientAuth:	tls.VerifyClientCertIfGiven,
-		ClientCAs:    roots,
-	}, nil
-}
-
 var sigs chan os.Signal
 func sig_h() {
 
