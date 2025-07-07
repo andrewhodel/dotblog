@@ -28,7 +28,7 @@ import (
 	"strings"
 	"strconv"
 	"bytes"
-	"github.com/andrewhodel/go-ip-ac"
+	"go-ip-ac"
 	"path/filepath"
 	"sort"
 	"syscall"
@@ -43,7 +43,6 @@ type Config struct {
 	Fqdn				string	`json:"fqdn"`
 	Port				int64	`json:"port"`
 	RedirectFromDefaultHttpPort	bool	`json:"redirectFromDefaultHttpPort"`
-	IpacModuleDirectory		string	`json:"ipacModuleDirectory"`
 	IpacBlockAfterNewConnections	int	`json:"ipacBlockAfterNewConnections"`
 	RecentPostsCount		int	`json:"recentPostsCount"`
 	RecentPostsTitlesCount		int	`json:"recentPostsTitlesCount"`
@@ -1186,7 +1185,6 @@ func main() {
 	go connection_count_loop()
 
 	// set the module directory for ipac
-	ip_ac.ModuleDirectory = config.IpacModuleDirectory
 	ip_ac.BlockAfterNewConnections = config.IpacBlockAfterNewConnections
 
 	// go-ip-ac

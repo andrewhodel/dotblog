@@ -24,21 +24,21 @@ cp config_sample.json config.json
 
 * set the paths to your TLS keys or place the key data in config.json
 * set the fqdn (fully qualified domain name) of the server
-* set the ipacModuleDirectory or the go-ip-ac Go Module must be in $HOME/go/src/github.com/andrewhodel/go-ip-ac
 
 2. Install the required Go modules.
 
 ```
-GO111MODULE=off go get -u github.com/andrewhodel/go-ip-ac
+cd go/src
+git clone https://github.com/andrewhodel/go-ip-ac
 ```
 
 3. Run the server.
 
 `sudo` allows `iptables` permission.
 
-`sudo GOPATH=/home/ec2-user/go GO111MODULE=off go run dotblog_server.go` to run in the foreground.
+`sudo go run dotblog_server.go` to run in the foreground.
 
-`sudo GOPATH=/home/ec2-user/go GO111MODULE=off go run dotblog_server.go > /dev/null 2>&1 &` to run in the background.
+`sudo go run dotblog_server.go > /dev/null 2>&1 &` to run in the background.
 
 ## Style
 
@@ -81,7 +81,7 @@ Output the go-ip-ac information to stdout by sending SIGUSR1 to the process.
 
 ```
 [ec2-user@ip dotblog]$ ps aux |grep dotblo
-root      3238  0.0  0.7 239820  7140 ?        S    02:09   0:00 sudo GOPATH=/home/ec2-user/go GO111MODULE=off go run dotblog_server.go
+root      3238  0.0  0.7 239820  7140 ?        S    02:09   0:00 sudo go run dotblog_server.go
 root      3239  0.0  1.3 1161948 13388 ?       Sl   02:09   0:00 go run dotblog_server.go
 root      3277  0.0  1.4 1229652 14596 ?       Sl   02:09   0:04 /tmp/go-build1939384177/b001/exe/dotblog_server
 ec2-user 27352  0.0  0.0 119428   940 pts/1    S+   06:41   0:00 grep --color=auto dotblo
