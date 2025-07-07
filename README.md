@@ -1,4 +1,4 @@
-# .blog
+# dotblog
 
 Manage posts with files.
 
@@ -73,7 +73,7 @@ A slower method is a 3xx redirect to `/path/index.html` using the response heade
 
 ## Upgrading
 
-`git pull` will upgrade .blog
+`git pull` will upgrade dotblog
 
 ## go-ip-ac Firewall Output
 
