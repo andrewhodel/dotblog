@@ -1184,7 +1184,6 @@ func main() {
 	go content_loop()
 	go connection_count_loop()
 
-	// set the module directory for ipac
 	ip_ac.BlockAfterNewConnections = config.IpacBlockAfterNewConnections
 
 	// go-ip-ac
